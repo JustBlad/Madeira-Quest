@@ -30,8 +30,9 @@ python3 -m http.server 8000
 ```
 → http://localhost:8000
 
-**GPS funktioniert auf dem Handy nur über HTTPS.** Am einfachsten: GitHub Pages aktivieren
-(Settings → Pages → Branch wählen) und den Link `…/madeira-quest/` an die Gruppe schicken.
+**Live-Version:** https://justblad.github.io/madeira-quest/
+(GitHub Pages: Settings → Pages → Branch `main`, Ordner `/ (root)`). Jede Änderung auf `main` ist nach ca. 1 Minute live.
+GPS funktioniert auf dem Handy nur über HTTPS – also über diesen Link.
 
 ## Anpassen
 - Orte, Texte, Koordinaten: `data.js` (Koordinaten sind noch ungefähr – in Google Maps lange drücken, Zahlen kopieren)
