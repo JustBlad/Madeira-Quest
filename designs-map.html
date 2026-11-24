@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Madeira Quest – Map designs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Fraunces:opsz,wght@9..144,700;9..144,800&family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&family=Archivo+Black&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: Inter, system-ui, sans-serif; background: #EDE9E3; color: #14202B; }
+  header.page { padding: 28px 20px 8px; max-width: 1440px; margin: 0 auto; }
+  header.page h1 { margin: 0 0 6px; font: 800 28px/1.1 "Bricolage Grotesque", sans-serif; letter-spacing: -.02em; }
+  header.page p { margin: 0; color: #5d6570; font-size: 15px; max-width: 680px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 28px; padding: 20px; max-width: 1440px; margin: 0 auto; }
+  .label { display: flex; flex-wrap: wrap; white-space: nowrap; align-items: baseline; gap: 10px; margin: 0 4px 10px; }
+  .label b { font: 800 20px "Bricolage Grotesque", sans-serif; } .label span { font-size: 13px; color: #6b7280; }
+  .why { font-size: 13.5px; color: #4b5563; margin: 12px 4px 0; line-height: 1.5; }
+  .phone { width: 100%; max-width: 340px; aspect-ratio: 9 / 18.5; border-radius: 34px; overflow: hidden; position: relative; box-shadow: 0 20px 50px rgba(20,32,43,.18), 0 0 0 8px #15171a; margin: 0 auto; isolation: isolate; }
+  .map { position: absolute; inset: 0; z-index: 0; }
+  .ui { position: absolute; z-index: 500; pointer-events: none; } .ui * { pointer-events: auto; }
+  .leaflet-control-attribution { font-size: 8px !important; }
+  .leaflet-control-zoom { display: none; }
+
+  /* shared geometry */
+  .top { left: 12px; right: 12px; top: 14px; display: flex; justify-content: space-between; align-items: center; }
+  .chips { left: 12px; right: 0; top: 64px; display: flex; gap: 6px; overflow: hidden; }
+  .card { left: 12px; right: 12px; bottom: 76px; }
+  .nav { left: 0; right: 0; bottom: 0; height: 64px; display: flex; justify-content: space-around; align-items: center; font: 600 11px Inter; }
+  .nav span { display: flex; flex-direction: column; align-items: center; gap: 3px; opacity: .55; } .nav span.on { opacity: 1; }
+  .nav i { width: 22px; height: 22px; border-radius: 6px; border: 2px solid currentColor; display: block; }
+
+  /* ============ A · QUEST ============ */
+  .A .map { background: #0B1F36; }
+  .A .lvl { display: flex; align-items: center; gap: 8px; background: #0E2A47; color: #fff; padding: 6px 10px 6px 6px; border-radius: 14px; font: 800 14px "Bricolage Grotesque"; box-shadow: 0 4px 0 #061527; }
+  .A .lvl b { width: 30px; height: 30px; border-radius: 9px; background: #F26B1D; display: grid; place-items: center; box-shadow: 0 3px 0 #A8440A; }
+  .A .lvl .bar { width: 70px; height: 8px; border-radius: 4px; background: rgba(255,255,255,.15); overflow: hidden; } .A .lvl .bar i { display: block; height: 100%; width: 62%; background: #FFB547; }
+  .A .streak { background: #FFB547; color: #0E2A47; font: 800 15px "Bricolage Grotesque"; padding: 7px 10px; border-radius: 12px; box-shadow: 0 4px 0 #C98411; }
+  .A .chip { background: #0E2A47; color: #fff; font: 700 12px Inter; padding: 7px 11px; border-radius: 10px; box-shadow: 0 3px 0 #061527; white-space: nowrap; } .A .chip.on { background: #F26B1D; box-shadow: 0 3px 0 #A8440A; }
+  .A .card { background: #fff; border-radius: 20px; padding: 12px; display: flex; gap: 12px; align-items: center; box-shadow: 0 6px 0 rgba(0,0,0,.35); font-family: "Bricolage Grotesque"; }
+  .A .card .ic { width: 54px; height: 54px; border-radius: 16px; background: #1E7FA8; display: grid; place-items: center; font-size: 26px; box-shadow: 0 4px 0 #125674; flex: none; }
+  .A .card b { display: block; font-size: 18px; } .A .card small { font: 500 12px Inter; color: #5d6570; }
+  .A .card .go { margin-left: auto; background: #F26B1D; color: #fff; font-weight: 800; padding: 10px 12px; border-radius: 12px; box-shadow: 0 4px 0 #A8440A; white-space: nowrap; }
+  .A .nav { background: #0A2038; color: #fff; } .A .nav .on { color: #FFB547; }
+  .pA { position: relative; width: 46px; height: 52px; }
+  .pA .hex { position: absolute; left: 3px; top: 0; width: 40px; height: 40px; border-radius: 13px; background: var(--c); display: grid; place-items: center; font-size: 19px; box-shadow: 0 4px 0 rgba(0,0,0,.35), 0 0 0 3px #fff; }
+  .pA .xp { position: absolute; left: 50%; bottom: -2px; transform: translateX(-50%); background: #FFB547; color: #0E2A47; font: 800 10px "Bricolage Grotesque"; padding: 2px 6px; border-radius: 6px; white-space: nowrap; box-shadow: 0 2px 0 #C98411; }
+  .pA.done .hex { background: #2BB673; } .pA.done .xp { background: #fff; color: #2BB673; box-shadow: none; }
+  .pA.lock .hex { background: #33475E; filter: grayscale(1); } .pA.lock .xp { background: #33475E; color: #cfd6de; box-shadow: none; }
+  .pA.next .hex { animation: bob 1.4s ease-in-out infinite; box-shadow: 0 4px 0 rgba(0,0,0,.35), 0 0 0 3px #fff, 0 0 0 9px rgba(242,107,29,.35); }
+  @keyframes bob { 50% { transform: translateY(-5px); } }
+
+  /* ============ B · PASSPORT ============ */
+  .B .map { background: #EFE6D2; }
+  .B .map .leaflet-tile-pane { filter: sepia(.25) saturate(.9); }
+  .B .tiles { left: 0; right: 0; top: 0; height: 18px; background-image: radial-gradient(circle at 50% 50%, transparent 4px, #2E4C9A 5px, #2E4C9A 6px, transparent 7px), linear-gradient(45deg, transparent 45%, #2E4C9A 46%, #2E4C9A 54%, transparent 55%), linear-gradient(-45deg, transparent 45%, #2E4C9A 46%, #2E4C9A 54%, transparent 55%); background-size: 18px 18px; background-color: #F7F1E6; border-bottom: 2px solid #2E4C9A; }
+  .B .top { top: 28px; }
+  .B .pass { background: #F7F1E6; border: 1px solid #d8cdb6; border-radius: 4px; padding: 7px 12px; box-shadow: 0 6px 16px rgba(31,47,85,.15); }
+  .B .pass small { display: block; font: 600 9px Inter; letter-spacing: .14em; text-transform: uppercase; color: #C0532A; } .B .pass b { font: 800 17px "Fraunces"; color: #1F2F55; }
+  .B .compass { width: 42px; height: 42px; border-radius: 50%; background: #F7F1E6; border: 1px solid #d8cdb6; display: grid; place-items: center; font: 800 14px "Fraunces"; color: #C0532A; box-shadow: 0 6px 16px rgba(31,47,85,.15); }
+  .B .chips { top: 84px; }
+  .B .chip { background: #F7F1E6; color: #1F2F55; border: 1px solid #1F2F55; font: 600 11.5px Inter; padding: 5px 10px; border-radius: 3px; white-space: nowrap; } .B .chip.on { background: #1F2F55; color: #F7F1E6; }
+  .B .card { background: #F7F1E6; border: 1px solid #d8cdb6; border-radius: 4px; padding: 12px; display: flex; gap: 12px; align-items: center; box-shadow: 0 10px 24px rgba(31,47,85,.2); }
+  .B .card .st { width: 58px; height: 58px; border-radius: 50%; border: 2px dashed #C0532A; display: grid; place-items: center; text-align: center; font: 800 9px "Fraunces"; color: #C0532A; flex: none; transform: rotate(-8deg); }
+  .B .card b { display: block; font: 800 17px "Fraunces"; color: #1F2F55; } .B .card small { font-size: 12px; color: #67708a; }
+  .B .card .go { margin-left: auto; background: #1F2F55; color: #fff; font: 600 12px Inter; padding: 8px 10px; border-radius: 3px; white-space: nowrap; }
+  .B .nav { background: #F7F1E6; color: #1F2F55; border-top: 1px solid #d8cdb6; } .B .nav .on { color: #C0532A; }
+  .pB { width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; text-align: center; font: 800 7.5px/1.05 "Fraunces"; letter-spacing: .02em; text-transform: uppercase; }
+  .pB.done { border: 2.5px solid var(--s); color: var(--s); background: rgba(247,241,230,.92); transform: rotate(var(--r)); box-shadow: 0 0 0 3px rgba(247,241,230,.9), 0 0 0 4px var(--s); }
+  .pB.done em { display: block; font: 600 6.5px Inter; font-style: normal; margin-top: 2px; }
+  .pB.open { border: 2px dashed #1F2F55; color: #1F2F55; background: rgba(247,241,230,.85); font-size: 16px; }
+  .pB.lock { border: 2px dashed #a39c8c; color: #a39c8c; background: rgba(247,241,230,.7); font-size: 13px; }
+
+  /* ============ C · SUNSET ============ */
+  .C .map { background: #1A1240; }
+  .C .glow { left: 0; right: 0; top: 0; bottom: 0; pointer-events: none !important; background: linear-gradient(170deg, rgba(255,138,61,.55) 0%, rgba(240,69,122,.35) 40%, rgba(106,63,209,.25) 75%, rgba(42,42,122,.4) 100%); mix-blend-mode: soft-light; z-index: 400; }
+  .C .glow2 { left: 0; right: 0; top: 0; height: 180px; pointer-events: none !important; background: linear-gradient(180deg, rgba(255,138,61,.55), rgba(255,138,61,0)); z-index: 401; }
+  .C .top { font-family: "Space Grotesk"; color: #fff; }
+  .C .top b { font-size: 20px; letter-spacing: -.02em; text-shadow: 0 2px 10px rgba(0,0,0,.3); }
+  .C .pill { background: rgba(255,255,255,.2); backdrop-filter: blur(10px); padding: 7px 12px; border-radius: 999px; font: 700 13px "Space Grotesk"; border: 1px solid rgba(255,255,255,.4); color: #fff; }
+  .C .chip { background: rgba(255,255,255,.18); backdrop-filter: blur(10px); color: #fff; border: 1px solid rgba(255,255,255,.35); font: 600 12px "Space Grotesk"; padding: 6px 12px; border-radius: 999px; white-space: nowrap; } .C .chip.on { background: #fff; color: #E2366F; }
+  .C .card { background: rgba(255,255,255,.18); backdrop-filter: blur(18px); border: 1px solid rgba(255,255,255,.4); border-radius: 26px; padding: 12px; color: #fff; font-family: "Space Grotesk"; }
+  .C .card .who { display: flex; align-items: center; gap: 8px; font: 500 12px Inter; }
+  .C .av { display: flex; } .C .av i { width: 24px; height: 24px; border-radius: 50%; border: 2px solid #fff; margin-left: -8px; display: block; } .C .av i:first-child { margin-left: 0; }
+  .C .card b { display: block; font-size: 22px; margin: 6px 0 8px; letter-spacing: -.02em; }
+  .C .card .go { display: block; text-align: center; background: #fff; color: #E2366F; font-weight: 700; padding: 11px; border-radius: 999px; }
+  .C .nav { left: 12px; right: 12px; bottom: 12px; height: 54px; border-radius: 20px; background: rgba(255,255,255,.18); backdrop-filter: blur(14px); color: #fff; border: 1px solid rgba(255,255,255,.35); }
+  .C .card { bottom: 78px; }
+  .pC { position: relative; width: 44px; height: 44px; }
+  .pC .dot { position: absolute; inset: 6px; border-radius: 50%; background: linear-gradient(135deg, #FFB547, #F0457A 60%, #6A3FD1); display: grid; place-items: center; font-size: 15px; box-shadow: 0 0 0 3px rgba(255,255,255,.9), 0 0 24px 6px rgba(240,69,122,.7); }
+  .pC .cnt { position: absolute; right: -4px; top: -2px; background: #fff; color: #E2366F; font: 700 10px "Space Grotesk"; padding: 1px 5px; border-radius: 999px; }
+  .pC.hot .dot { animation: pulseC 1.8s ease-in-out infinite; }
+  @keyframes pulseC { 50% { box-shadow: 0 0 0 3px rgba(255,255,255,.9), 0 0 34px 12px rgba(255,181,71,.8); } }
+  .pC.lock .dot { background: rgba(255,255,255,.25); box-shadow: 0 0 0 2px rgba(255,255,255,.6); font-size: 12px; }
+
+  /* ============ D · STICKER ============ */
+  .D .map { background: #FFF3D6; }
+  .D .map .leaflet-tile-pane { filter: contrast(1.1); }
+  .D .logo { font: 17px/.95 "Archivo Black"; background: #FFF3D6; border: 3px solid #111; padding: 6px 8px; border-radius: 10px; box-shadow: 4px 4px 0 #111; }
+  .D .logo span { color: #FF5A1F; }
+  .D .pts { background: #B8F2E6; border: 3px solid #111; box-shadow: 4px 4px 0 #111; padding: 6px 10px; font: 14px "Archivo Black"; white-space: nowrap; border-radius: 10px; }
+  .D .chips { top: 72px; }
+  .D .chip { border: 3px solid #111; border-radius: 999px; padding: 4px 10px; font: 12px "Archivo Black"; background: #fff; white-space: nowrap; box-shadow: 2px 2px 0 #111; } .D .chip.on { background: #111; color: #FFF3D6; } .D .chip.p { background: #FFB8D9; } .D .chip.g { background: #C6F36B; }
+  .D .card { background: #fff; border: 3px solid #111; border-radius: 16px; box-shadow: 6px 6px 0 #111; padding: 12px; font-family: "Archivo Black"; }
+  .D .card .t { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+  .D .card b { font-size: 20px; line-height: 1; text-transform: uppercase; } .D .card small { display: block; font: 500 12px Inter; color: #333; margin: 6px 0 10px; }
+  .D .card .tag { background: #FFE14D; border: 3px solid #111; padding: 3px 7px; transform: rotate(6deg); font-size: 11px; border-radius: 6px; white-space: nowrap; }
+  .D .card .go { display: block; text-align: center; background: #FF5A1F; color: #fff; border: 3px solid #111; box-shadow: 3px 3px 0 #111; padding: 9px; border-radius: 10px; font-size: 15px; }
+  .D .nav { background: #fff; border-top: 3px solid #111; color: #111; font-family: "Archivo Black"; } .D .nav .on { color: #FF5A1F; } .D .nav .on i { background: #FF5A1F; border-color: #111; }
+  .pD { display: inline-block; white-space: nowrap; font: 11px "Archivo Black"; text-transform: uppercase; border: 3px solid #111; border-radius: 10px; padding: 4px 8px 4px 5px; background: var(--c); color: #111; box-shadow: 3px 3px 0 #111; transform: rotate(var(--r)); position: relative; }
+  .pD i { font-style: normal; display: inline-block; width: 20px; height: 20px; border-radius: 6px; background: #fff; border: 2px solid #111; text-align: center; line-height: 16px; margin-right: 4px; font-size: 11px; }
+  .pD::after { content: ""; position: absolute; left: 14px; bottom: -10px; border: 6px solid transparent; border-top-color: #111; }
+  .pD.lock { background: #ddd; color: #777; }
+</style>
+</head>
+<body>
+<header class="page">
+  <h1>Madeira Quest · map in 4 styles</h1>
+  <p>Same Funchal map, four moods: map colours, pins, the place preview and the controls all change. The maps are real and interactive – drag and zoom them.</p>
+</header>
+
+<div class="grid">
+  <section>
+    <div class="label"><b>A · Quest</b><span>dark game map · XP pins · quest path</span></div>
+    <div class="phone A">
+      <div class="map" id="mA"></div>
+      <div class="ui top"><div class="lvl"><b>3</b><div><div>Level 3</div><div class="bar"><i></i></div></div></div><div class="streak">🔥 4</div></div>
+      <div class="ui chips"><span class="chip on">All</span><span class="chip">☕ Cafés</span><span class="chip">🌊 Beaches</span><span class="chip">🍹 Bars</span></div>
+      <div class="ui card"><div class="ic">🌊</div><div><b>Yellow Castle</b><small>650 m · next on your quest</small></div><span class="go">+75 XP</span></div>
+      <div class="ui nav"><span class="on"><i></i>Map</span><span><i></i>Quests</span><span><i></i>Profile</span></div>
+    </div>
+    <p class="why"><b>Map:</b> dark navy map so the orange pins glow. Every pin shows its XP reward, the next target bounces, and a dashed <b>quest path</b> connects your next places like a level map in a game.</p>
+  </section>
+
+  <section>
+    <div class="label"><b>B · Passport</b><span>watercolour map · stamp pins</span></div>
+    <div class="phone B">
+      <div class="map" id="mB"></div>
+      <div class="ui tiles"></div>
+      <div class="ui top"><div class="pass"><small>Erasmus passport</small><b>5 / 12 stamps</b></div><div class="compass">N</div></div>
+      <div class="ui chips"><span class="chip on">All</span><span class="chip">Cafés</span><span class="chip">Beaches</span><span class="chip">Bars</span></div>
+      <div class="ui card"><div class="st">NUMBER<br>TWO</div><div><b>Bar Number Two</b><small>Old Town · 4 friends here</small></div><span class="go">Get stamp</span></div>
+      <div class="ui nav"><span class="on"><i></i>Map</span><span><i></i>Passport</span><span><i></i>Profile</span></div>
+    </div>
+    <p class="why"><b>Map:</b> soft <b>watercolour</b> map like an old travel guide. Visited places are coloured <b>stamps</b> (slightly rotated, with date), open places are dashed circles waiting to be stamped.</p>
+  </section>
+
+  <section>
+    <div class="label"><b>C · Sunset</b><span>night map · glowing pins · friends</span></div>
+    <div class="phone C">
+      <div class="map" id="mC"></div>
+      <div class="ui glow"></div><div class="ui glow2"></div>
+      <div class="ui top"><b>madeira quest</b><span class="pill">★ 340</span></div>
+      <div class="ui chips"><span class="chip on">All</span><span class="chip">Cafés</span><span class="chip">Beaches</span><span class="chip">Bars</span></div>
+      <div class="ui card"><div class="who"><span class="av"><i style="background:#FFB547"></i><i style="background:#7BD3F7"></i><i style="background:#C6F36B"></i></span>Sofia, Luca + 4 are here tonight</div><b>Rei da Poncha</b><span class="go">I'm going 🌅</span></div>
+      <div class="ui nav"><span class="on"><i></i>Map</span><span><i></i>Quests</span><span><i></i>Profile</span></div>
+    </div>
+    <p class="why"><b>Map:</b> dark map tinted in <b>sunset colours</b>, glowing gradient pins. The number on a pin = friends who were there; popular places pulse. Feels social and alive, especially at night.</p>
+  </section>
+
+  <section>
+    <div class="label"><b>D · Sticker</b><span>black & white map · sticker pins</span></div>
+    <div class="phone D">
+      <div class="map" id="mD"></div>
+      <div class="ui top"><div class="logo">MADEIRA <span>QUEST</span></div><div class="pts">340 PTS</div></div>
+      <div class="ui chips"><span class="chip on">ALL</span><span class="chip p">CAFÉS</span><span class="chip g">BEACHES</span><span class="chip">BARS</span></div>
+      <div class="ui card"><div class="t"><b>Rei da<br>Poncha</b><span class="tag">★ 4.8</span></div><small>The poncha everyone talks about. 5 friends were here.</small><span class="go">UPLOAD PIC → UNLOCK</span></div>
+      <div class="ui nav"><span class="on"><i></i>Map</span><span><i></i>Quests</span><span><i></i>Profile</span></div>
+    </div>
+    <p class="why"><b>Map:</b> high-contrast <b>black &amp; white</b> map, the colour comes only from the <b>sticker pins</b> with the place name on them. You can read every place without tapping – very clear and very playful.</p>
+  </section>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+  const KEY = "iATCxHYYgZaPl2865zvK";
+  const P = [
+    { id: "gaudeamus", n: "Gaudeamus", lat: 32.6592854, lng: -16.9250331, c: "#C8642E", e: "☕", lvl: 1 },
+    { id: "caco", n: "Caco", lat: 32.6478369, lng: -16.9058253, c: "#5E7B3A", e: "🥪", lvl: 1 },
+    { id: "formosa", n: "Formosa", lat: 32.6382596, lng: -16.9497874, c: "#1E7FA8", e: "🌊", lvl: 1 },
+    { id: "yellow", n: "Yellow Castle", lat: 32.6466719, lng: -16.8985478, c: "#1E7FA8", e: "🌊", lvl: 1 },
+    { id: "two", n: "Number Two", lat: 32.6477622, lng: -16.9011962, c: "#8E2C48", e: "🍹", lvl: 1 },
+    { id: "rei", n: "Rei da Poncha", lat: 32.6478852, lng: -16.9060718, c: "#8E2C48", e: "🍹", lvl: 1 },
+    { id: "zebra", n: "Zebra", lat: 32.6487647, lng: -16.9091029, c: "#E5746A", e: "🍦", lvl: 2 },
+    { id: "maia", n: "Maia", lat: 32.6489796, lng: -16.9101402, c: "#C8642E", e: "☕", lvl: 2 },
+    { id: "toco", n: "Toco", lat: 32.6471045, lng: -16.8955779, c: "#1E7FA8", e: "🌊", lvl: 2 },
+    { id: "almirante", n: "Almirante", lat: 32.6464862, lng: -16.9009611, c: "#1E7FA8", e: "🌊", lvl: 2 },
+    { id: "venda", n: "Venda Velha", lat: 32.6478069, lng: -16.9007364, c: "#8E2C48", e: "🍹", lvl: 2 },
+    { id: "sete", n: "Sete Mares", lat: 32.6435589, lng: -16.9146699, c: "#C8642E", e: "☕", lvl: 2 },
+  ];
+  const done = new Set(["gaudeamus", "formosa", "caco", "rei"]);
+  const dates = { gaudeamus: "12 NOV", formosa: "14 NOV", caco: "15 NOV", rei: "20 NOV" };
+  const friends = { gaudeamus: 6, caco: 4, formosa: 5, yellow: 4, two: 4, rei: 5, zebra: 2, maia: 3, almirante: 3, venda: 2, toco: 1 };
+  // focus on the Old Town, where most places are (the others are a scroll away)
+  const bounds = L.latLngBounds(P.filter((p) => !["gaudeamus", "formosa", "sete"].includes(p.id)).map((p) => [p.lat, p.lng]));
+  // rough Funchal coastline – only drawn if map tiles can't load (offline preview)
+  const coast = [[32.6375,-16.975],[32.6380,-16.955],[32.6372,-16.945],[32.6352,-16.935],[32.6395,-16.925],[32.6425,-16.915],[32.6450,-16.908],[32.6458,-16.902],[32.6460,-16.898],[32.6466,-16.894],[32.6480,-16.880],[32.62,-16.880],[32.62,-16.975]];
+
+  function makeMap(id, style, sea, icon, extra) {
+    const m = L.map(id, { zoomControl: false, attributionControl: true, zoomSnap: 0.25 });
+    m.fitBounds(bounds, { paddingTopLeft: [30, 120], paddingBottomRight: [40, 170] });
+    let fails = 0, fallback = false;
+    const t = L.tileLayer(`https://api.maptiler.com/maps/${style}/{z}/{x}/{y}{r}.png?key=${KEY}`, { tileSize: 512, zoomOffset: -1, maxZoom: 20, attribution: "© MapTiler © OSM" }).addTo(m);
+    t.on("tileerror", () => { if (++fails === 1 && !fallback) { fallback = true; L.polygon(coast, { stroke: false, fillColor: sea, fillOpacity: 1, interactive: false }).addTo(m).bringToBack(); } });
+    P.forEach((p) => L.marker([p.lat, p.lng], { icon: icon(p) }).addTo(m));
+    if (extra) extra(m);
+  }
+
+  // A · Quest – dark map, XP hex pins, dashed quest path
+  makeMap("mA", "dataviz-dark", "#123A5E", (p) => {
+    const st = done.has(p.id) ? "done" : p.lvl === 2 ? "lock" : p.id === "yellow" ? "next" : "";
+    const xp = done.has(p.id) ? "✓" : p.lvl === 2 ? "🔒" : "+50";
+    return L.divIcon({ className: "", iconSize: [46, 52], iconAnchor: [23, 44], html: `<div class="pA ${st}" style="--c:${p.c}"><div class="hex">${p.e}</div><div class="xp">${xp}</div></div>` });
+  }, (m) => {
+    const path = ["rei", "two", "yellow"].map((id) => P.find((p) => p.id === id)).map((p) => [p.lat, p.lng]);
+    L.polyline(path, { color: "#FFB547", weight: 4, dashArray: "2 10", lineCap: "round", interactive: false }).addTo(m);
+  });
+
+  // B · Passport – watercolour map, stamp pins
+  makeMap("mB", "aquarelle", "#BFD8E6", (p) => {
+    const s = done.has(p.id);
+    const html = s
+      ? `<div class="pB done" style="--s:${["#C0532A", "#2E4C9A"][p.n.length % 2]};--r:${(p.n.length % 5) * 4 - 8}deg">${p.n}<em>${dates[p.id]}</em></div>`
+      : p.lvl === 2 ? `<div class="pB lock">🔒</div>` : `<div class="pB open">+</div>`;
+    return L.divIcon({ className: "", iconSize: [46, 46], iconAnchor: [23, 23], html });
+  });
+
+  // C · Sunset – dark map tinted, glowing pins with friend counts
+  makeMap("mC", "streets-v2-dark", "#3A2A7A", (p) => {
+    const f = friends[p.id] || 0;
+    const cls = p.lvl === 2 ? "lock" : f >= 5 ? "hot" : "";
+    return L.divIcon({ className: "", iconSize: [44, 44], iconAnchor: [22, 22], html: `<div class="pC ${cls}"><div class="dot">${p.lvl === 2 ? "🔒" : p.e}</div>${p.lvl === 1 && f ? `<span class="cnt">${f}</span>` : ""}</div>` });
+  });
+
+  // D · Sticker – black & white map, sticker pins with names
+  const sticker = { "#C8642E": "#FFB8D9", "#5E7B3A": "#C6F36B", "#1E7FA8": "#B8F2E6", "#8E2C48": "#FFE14D", "#E5746A": "#FFB8D9" };
+  makeMap("mD", "toner-v2", "#FFFFFF", (p) => {
+    const lock = p.lvl === 2;
+    return L.divIcon({ className: "", iconSize: null, iconAnchor: [17, 38], html: `<div class="pD ${lock ? "lock" : ""}" style="--c:${sticker[p.c]};--r:${(p.n.length % 3) * 3 - 3}deg"><i>${lock ? "🔒" : done.has(p.id) ? "✓" : p.e}</i>${p.n}</div>` });
+  });
+</script>
+</body>
+</html>
