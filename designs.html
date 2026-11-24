@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Madeira Quest – Design directions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Fraunces:opsz,wght@9..144,600;9..144,800&family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&family=Archivo+Black&display=swap" rel="stylesheet" />
+<style>
+  :root { --page: #EDE9E3; --ink: #14202B; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: Inter, system-ui, sans-serif; background: var(--page); color: var(--ink); }
+  header.page { padding: 28px 20px 8px; max-width: 1400px; margin: 0 auto; }
+  header.page h1 { margin: 0 0 6px; font: 800 28px/1.1 "Bricolage Grotesque", sans-serif; letter-spacing: -.02em; }
+  header.page p { margin: 0; color: #5d6570; font-size: 15px; max-width: 640px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 28px; padding: 20px; max-width: 1440px; margin: 0 auto; }
+  .option > .label { display: flex; align-items: baseline; gap: 10px; margin: 0 4px 10px; }
+  .option > .label b { font: 800 20px "Bricolage Grotesque", sans-serif; }
+  .option > .label span { font-size: 13px; color: #6b7280; }
+  .option > .why { font-size: 13.5px; color: #4b5563; margin: 12px 4px 0; line-height: 1.5; }
+  .phone { width: 100%; max-width: 340px; aspect-ratio: 9 / 18.5; border-radius: 34px; overflow: hidden; position: relative; box-shadow: 0 20px 50px rgba(20,32,43,.18), 0 0 0 8px #15171a; margin: 0 auto; }
+  .scr { position: absolute; inset: 0; overflow: hidden; display: flex; flex-direction: column; }
+  svg.art { display: block; width: 100%; height: 100%; }
+
+  /* ============ A · QUEST (bold game) ============ */
+  .A { background: #0E2A47; color: #fff; font-family: "Bricolage Grotesque", sans-serif; }
+  .A .top { padding: 18px 18px 10px; display: flex; align-items: center; gap: 10px; }
+  .A .lvl { width: 46px; height: 46px; border-radius: 14px; background: #F26B1D; display: grid; place-items: center; font-weight: 800; font-size: 20px; box-shadow: 0 4px 0 #A8440A; }
+  .A .xp { flex: 1; }
+  .A .xp small { font: 600 11px Inter; opacity: .7; letter-spacing: .06em; text-transform: uppercase; }
+  .A .bar { height: 12px; border-radius: 6px; background: rgba(255,255,255,.12); margin-top: 5px; overflow: hidden; }
+  .A .bar i { display: block; height: 100%; width: 62%; background: linear-gradient(90deg, #FFB547, #F26B1D); border-radius: 6px; }
+  .A .streak { background: #FFB547; color: #0E2A47; font-weight: 800; padding: 8px 10px; border-radius: 12px; font-size: 15px; box-shadow: 0 4px 0 #C98411; }
+  .A .card { margin: 8px 16px; background: #fff; color: #14202B; border-radius: 22px; overflow: hidden; box-shadow: 0 6px 0 rgba(0,0,0,.25); }
+  .A .card .pic { height: 160px; position: relative; }
+  .A .tag { position: absolute; left: 12px; top: 12px; background: #fff; color: #0E2A47; font: 700 12px Inter; padding: 5px 9px; border-radius: 8px; }
+  .A .reward { position: absolute; right: 12px; top: 12px; background: #2BB673; color: #fff; font-weight: 800; font-size: 14px; padding: 5px 10px; border-radius: 10px; box-shadow: 0 3px 0 #1C8150; }
+  .A .card .body { padding: 14px 16px 16px; }
+  .A .card h3 { margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -.01em; }
+  .A .card p { margin: 4px 0 12px; font: 500 13px Inter; color: #5d6570; }
+  .A .cta { display: block; text-align: center; background: #F26B1D; color: #fff; font-weight: 800; font-size: 17px; padding: 14px; border-radius: 16px; box-shadow: 0 5px 0 #A8440A; }
+  .A .row { display: flex; gap: 10px; padding: 12px 16px; }
+  .A .badge { flex: 1; aspect-ratio: 1; border-radius: 18px; background: rgba(255,255,255,.08); display: grid; place-items: center; font-size: 26px; position: relative; }
+  .A .badge.on { background: #FFB547; box-shadow: 0 4px 0 #C98411; }
+  .A .badge small { position: absolute; bottom: -18px; font: 600 10px Inter; opacity: .7; white-space: nowrap; }
+  .A .quest { margin: 26px 16px 0; padding: 12px 14px; border: 2px dashed rgba(255,255,255,.25); border-radius: 16px; font-size: 15px; font-weight: 700; display: flex; justify-content: space-between; }
+  .A .quest span { color: #FFB547; }
+
+  /* ============ B · PASSPORT (azulejo travel journal) ============ */
+  .B { background: #F7F1E6; color: #1F2F55; font-family: Inter, sans-serif; }
+  .B .tiles { height: 92px; background-color: #F7F1E6; background-image:
+      radial-gradient(circle at 50% 50%, transparent 9px, #2E4C9A 10px, #2E4C9A 12px, transparent 13px),
+      linear-gradient(45deg, transparent 46%, #2E4C9A 47%, #2E4C9A 53%, transparent 54%),
+      linear-gradient(-45deg, transparent 46%, #2E4C9A 47%, #2E4C9A 53%, transparent 54%);
+    background-size: 36px 36px; opacity: .9; border-bottom: 4px solid #2E4C9A; }
+  .B .head { margin: -46px 16px 0; background: #fff; border-radius: 6px; padding: 14px 16px; box-shadow: 0 8px 24px rgba(31,47,85,.12); position: relative; }
+  .B .head small { font: 600 10.5px Inter; letter-spacing: .14em; text-transform: uppercase; color: #C0532A; }
+  .B .head h2 { margin: 2px 0 0; font: 800 26px "Fraunces", serif; letter-spacing: -.01em; }
+  .B .head p { margin: 2px 0 0; font-size: 13px; color: #67708a; }
+  .B .stamps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 16px; }
+  .B .stamp { aspect-ratio: 1; border: 2px dashed #b9b2a3; border-radius: 50%; display: grid; place-items: center; text-align: center; font: 600 10px Inter; color: #a39c8c; padding: 6px; }
+  .B .stamp.on { border: 3px solid #C0532A; color: #C0532A; transform: rotate(-8deg); background: rgba(192,83,42,.06); font: 800 11px "Fraunces", serif; letter-spacing: .02em; }
+  .B .stamp.on.b { border-color: #2E4C9A; color: #2E4C9A; background: rgba(46,76,154,.06); transform: rotate(6deg); }
+  .B .stamp.on em { display: block; font: 600 9px Inter; font-style: normal; opacity: .8; }
+  .B .next { margin: 4px 16px; background: #fff; border-radius: 6px; display: flex; gap: 12px; padding: 10px; box-shadow: 0 6px 18px rgba(31,47,85,.08); }
+  .B .next .pic { width: 84px; height: 84px; border-radius: 4px; overflow: hidden; flex: none; }
+  .B .next h4 { margin: 2px 0 2px; font: 800 18px "Fraunces", serif; }
+  .B .next p { margin: 0 0 8px; font-size: 12px; color: #67708a; }
+  .B .next a { display: inline-block; background: #1F2F55; color: #fff; font-size: 12.5px; font-weight: 600; padding: 7px 12px; border-radius: 4px; }
+
+  /* ============ C · SUNSET (vibrant gradient + glass) ============ */
+  .C { color: #fff; font-family: "Space Grotesk", sans-serif; background: linear-gradient(170deg, #FF8A3D 0%, #F0457A 45%, #6A3FD1 80%, #2A2A7A 100%); }
+  .C .scr::before { content: ""; position: absolute; width: 260px; height: 260px; border-radius: 50%; background: radial-gradient(circle, rgba(255,214,120,.9), rgba(255,214,120,0) 70%); left: 50%; top: 22%; transform: translateX(-50%); }
+  .C .top { position: relative; padding: 20px 18px 0; display: flex; justify-content: space-between; align-items: center; }
+  .C .top b { font-size: 22px; letter-spacing: -.02em; }
+  .C .pill { background: rgba(255,255,255,.2); backdrop-filter: blur(10px); padding: 7px 12px; border-radius: 999px; font-weight: 700; font-size: 14px; border: 1px solid rgba(255,255,255,.35); }
+  .C .big { position: relative; padding: 70px 18px 0; }
+  .C .big small { font-weight: 500; font-size: 13px; opacity: .85; letter-spacing: .08em; text-transform: uppercase; }
+  .C .big h2 { margin: 4px 0 0; font-size: 44px; line-height: .95; letter-spacing: -.03em; }
+  .C .glass { position: relative; margin: 22px 14px 0; padding: 14px; border-radius: 26px; background: rgba(255,255,255,.18); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,.4); }
+  .C .glass .who { display: flex; align-items: center; gap: 8px; font: 500 13px Inter; }
+  .C .av { display: flex; } .C .av i { width: 26px; height: 26px; border-radius: 50%; border: 2px solid rgba(255,255,255,.9); margin-left: -8px; display: block; } .C .av i:first-child { margin-left: 0; }
+  .C .glass .row { display: flex; gap: 10px; margin-top: 12px; }
+  .C .glass .row div { flex: 1; background: rgba(255,255,255,.18); border-radius: 16px; padding: 10px; }
+  .C .glass .row b { display: block; font-size: 22px; } .C .glass .row small { font: 500 11.5px Inter; opacity: .85; }
+  .C .cta { position: relative; margin: 14px; display: block; text-align: center; background: #fff; color: #E2366F; font-weight: 700; font-size: 17px; padding: 16px; border-radius: 999px; box-shadow: 0 10px 30px rgba(42,42,122,.35); }
+
+  /* ============ D · STICKER (neo-brutalist, Gen-Z) ============ */
+  .D { background: #FFF3D6; color: #111; font-family: "Archivo Black", sans-serif; }
+  .D .top { padding: 18px 16px 6px; display: flex; justify-content: space-between; align-items: center; }
+  .D .logo { font-size: 22px; line-height: .9; } .D .logo span { background: #FF5A1F; color: #fff; padding: 0 6px; display: inline-block; transform: rotate(-3deg); border: 3px solid #111; }
+  .D .pts { background: #B8F2E6; border: 3px solid #111; box-shadow: 4px 4px 0 #111; padding: 6px 10px; font-size: 16px; border-radius: 10px; }
+  .D .card { margin: 12px 16px; background: #fff; border: 3px solid #111; border-radius: 18px; box-shadow: 7px 7px 0 #111; overflow: hidden; }
+  .D .card .pic { height: 150px; border-bottom: 3px solid #111; position: relative; }
+  .D .sticker { position: absolute; right: -6px; top: 12px; background: #FFE14D; border: 3px solid #111; padding: 6px 10px; transform: rotate(8deg); font-size: 14px; border-radius: 8px; }
+  .D .card .body { padding: 12px 14px 14px; }
+  .D .card h3 { margin: 0; font-size: 24px; line-height: 1; text-transform: uppercase; }
+  .D .card p { margin: 6px 0 12px; font: 500 13px Inter; color: #333; }
+  .D .cta { display: block; text-align: center; background: #FF5A1F; color: #fff; border: 3px solid #111; box-shadow: 4px 4px 0 #111; padding: 12px; border-radius: 12px; font-size: 17px; }
+  .D .chips { display: flex; gap: 8px; padding: 6px 16px; flex-wrap: wrap; }
+  .D .chip { border: 3px solid #111; border-radius: 999px; padding: 6px 12px; font-size: 13px; background: #fff; }
+  .D .chip.on { background: #111; color: #FFF3D6; }
+  .D .chip.p { background: #FFB8D9; } .D .chip.g { background: #C6F36B; }
+
+  /* bottom nav per design */
+  .nav { position: absolute; left: 0; right: 0; bottom: 0; height: 64px; display: flex; justify-content: space-around; align-items: center; font: 600 11px Inter; }
+  .nav span { display: flex; flex-direction: column; align-items: center; gap: 3px; opacity: .55; }
+  .nav span.on { opacity: 1; }
+  .nav i { width: 22px; height: 22px; border-radius: 6px; border: 2px solid currentColor; display: block; }
+  .A .nav { background: #0A2038; color: #fff; } .A .nav .on { color: #FFB547; }
+  .B .nav { background: #fff; color: #1F2F55; border-top: 1px solid #e6dfd1; } .B .nav .on { color: #C0532A; }
+  .C .nav { margin: 0 14px 14px; left: 0; right: 0; bottom: 0; border-radius: 22px; background: rgba(255,255,255,.18); backdrop-filter: blur(14px); color: #fff; border: 1px solid rgba(255,255,255,.35); }
+  .D .nav { background: #fff; border-top: 3px solid #111; color: #111; font-family: "Archivo Black"; } .D .nav .on { color: #FF5A1F; }
+  .D .nav .on i { background: #FF5A1F; border-color: #111; }
+</style>
+</head>
+<body>
+<header class="page">
+  <h1>Madeira Quest · 4 design directions</h1>
+  <p>Same app, four different moods. Each phone shows the main elements: progress, a place card, the call to action and the rewards. Pick one (or mix) and the real app gets restyled.</p>
+</header>
+
+<!-- shared illustration -->
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <symbol id="beach" viewBox="0 0 200 120" preserveAspectRatio="xMidYMid slice">
+      <rect width="200" height="120" fill="#8FD8F5"/><circle cx="150" cy="34" r="16" fill="#FFD45C"/>
+      <path d="M0 70 C40 62 80 76 120 68 S180 62 200 66 V120 H0Z" fill="#1E7FA8"/>
+      <path d="M0 78 C40 72 80 84 120 76 S180 72 200 74" stroke="#fff" stroke-opacity=".6" stroke-width="2" fill="none"/>
+      <path d="M0 98 C50 90 110 104 200 92 V120 H0Z" fill="#E9C98F"/>
+      <rect x="118" y="38" width="30" height="34" fill="#FFC52E" rx="2"/><rect x="114" y="33" width="38" height="7" fill="#E8A800"/>
+    </symbol>
+    <symbol id="sunset" viewBox="0 0 200 120" preserveAspectRatio="xMidYMid slice">
+      <rect width="200" height="120" fill="#FFB27A"/><circle cx="100" cy="66" r="22" fill="#FFE08A"/>
+      <path d="M0 70 H200 V120 H0Z" fill="#E2366F" opacity=".8"/><path d="M0 84 C50 78 120 90 200 80 V120 H0Z" fill="#6A3FD1" opacity=".8"/>
+    </symbol>
+  </defs>
+</svg>
+
+<div class="grid">
+
+  <!-- A -->
+  <section class="option">
+    <div class="label"><b>A · Quest</b><span>bold game · navy + orange</span></div>
+    <div class="phone A"><div class="scr">
+      <div class="top">
+        <div class="lvl">3</div>
+        <div class="xp"><small>Level 3 · 340 / 550 XP</small><div class="bar"><i></i></div></div>
+        <div class="streak">🔥 4</div>
+      </div>
+      <div class="card">
+        <div class="pic"><svg class="art"><use href="#beach"/></svg><span class="tag">🏖 Beach · 650 m</span><span class="reward">+75 XP</span></div>
+        <div class="body">
+          <h3>Yellow Castle Praia</h3>
+          <p>★ 4.8 · 6 friends were here this week</p>
+          <a class="cta">📸 Check in with a photo</a>
+        </div>
+      </div>
+      <div class="row">
+        <div class="badge on">☕<small>Café fan</small></div>
+        <div class="badge on">🌊<small>Beach</small></div>
+        <div class="badge">🍹<small>Poncha</small></div>
+        <div class="badge">🏆<small>Master</small></div>
+      </div>
+      <div class="quest">Weekly quest: 2 / 3 places <span>⏳ 1d 4h</span></div>
+    <div class="nav"><span class="on"><i></i>Map</span><span><i></i>Quests</span><span><i></i>Profile</span></div>
+    </div></div>
+    <p class="why"><b>Feels like:</b> a mobile game. XP bar, levels, streak and chunky “pressable” buttons. Strongest gamification and motivation, fits Fogg's “spark” best.</p>
+  </section>
+
+  <!-- B -->
+  <section class="option">
+    <div class="label"><b>B · Passport</b><span>azulejo travel journal</span></div>
+    <div class="phone B"><div class="scr">
+      <div class="tiles"></div>
+      <div class="head">
+        <small>Erasmus passport · Funchal</small>
+        <h2>5 of 12 stamps</h2>
+        <p>Collect a stamp at every place you visit.</p>
+      </div>
+      <div class="stamps">
+        <div class="stamp on">GAUDEAMUS<em>12 NOV</em></div>
+        <div class="stamp on b">FORMOSA<em>14 NOV</em></div>
+        <div class="stamp on">CACO<em>15 NOV</em></div>
+        <div class="stamp on b">YELLOW<br>CASTLE<em>18 NOV</em></div>
+        <div class="stamp on">REI DA<br>PONCHA<em>20 NOV</em></div>
+        <div class="stamp">Number<br>Two</div>
+      </div>
+      <div class="next">
+        <div class="pic"><svg class="art"><use href="#beach"/></svg></div>
+        <div><h4>Bar Number Two</h4><p>Old Town · 4 friends were here</p><a>Get this stamp →</a></div>
+      </div>
+    <div class="nav"><span class="on"><i></i>Map</span><span><i></i>Quests</span><span><i></i>Profile</span></div>
+    </div></div>
+    <p class="why"><b>Feels like:</b> a travel diary with Portuguese tiles. Visited places become passport stamps. Very Madeira, unique, and collecting stamps is a strong motivation by itself (completion).</p>
+  </section>
+
+  <!-- C -->
+  <section class="option">
+    <div class="label"><b>C · Sunset</b><span>vibrant gradient + glass</span></div>
+    <div class="phone C"><div class="scr">
+      <div class="top"><b>madeira quest</b><span class="pill">★ 340</span></div>
+      <div class="big"><small>Tonight's pick</small><h2>Praia<br>Formosa</h2></div>
+      <div class="glass">
+        <div class="who"><span class="av"><i style="background:#FFB547"></i><i style="background:#7BD3F7"></i><i style="background:#C6F36B"></i></span> Sofia, Luca + 4 went for sunset</div>
+        <div class="row"><div><b>4.8</b><small>rating</small></div><div><b>18 min</b><small>walk</small></div><div><b>+50</b><small>points</small></div></div>
+      </div>
+      <a class="cta">I'm going 🌅</a>
+    <div class="nav"><span class="on"><i></i>Map</span><span><i></i>Quests</span><span><i></i>Profile</span></div>
+    </div></div>
+    <p class="why"><b>Feels like:</b> Instagram / Spotify Wrapped. Sunset gradient over the Atlantic, frosted glass, big type. Very eye-catching and social, but less calm for everyday use.</p>
+  </section>
+
+  <!-- D -->
+  <section class="option">
+    <div class="label"><b>D · Sticker</b><span>neo-brutalist · playful</span></div>
+    <div class="phone D"><div class="scr">
+      <div class="top"><div class="logo">MADEIRA<br><span>QUEST</span></div><div class="pts">340 PTS</div></div>
+      <div class="chips"><span class="chip on">ALL</span><span class="chip p">CAFÉS</span><span class="chip g">BEACHES</span><span class="chip">BARS</span></div>
+      <div class="card">
+        <div class="pic"><svg class="art"><use href="#sunset"/></svg><span class="sticker">ONLY 2 LEFT<br>THIS WEEK!</span></div>
+        <div class="body">
+          <h3>Rei da Poncha</h3>
+          <p>★ 4.8 · The poncha everyone talks about. 5 friends were here.</p>
+          <a class="cta">UPLOAD PIC → UNLOCK</a>
+        </div>
+      </div>
+    <div class="nav"><span class="on"><i></i>Map</span><span><i></i>Quests</span><span><i></i>Profile</span></div>
+    </div></div>
+    <p class="why"><b>Feels like:</b> a Gen-Z poster. Thick outlines, hard shadows, stickers and bold colours. Very fun and memorable, a bit loud. Great for a student audience.</p>
+  </section>
+
+</div>
+</body>
+</html>
