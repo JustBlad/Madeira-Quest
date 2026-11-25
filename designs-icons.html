@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Madeira Quest – Icon styles</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  :root { --blue: #1D6FE8; --deep: #1247A8; --navy: #0E2A47; --sun: #FFC23D; --ink: #14202B; --muted: #8590A0; --line: #E1E7EF; --bg: #F6F8FB; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: Inter, system-ui, sans-serif; background: #E9EEF5; color: var(--ink); }
+  header { padding: 28px 20px 6px; max-width: 1200px; margin: 0 auto; }
+  header h1 { margin: 0 0 6px; font-size: 26px; font-weight: 800; letter-spacing: -.02em; }
+  header p { margin: 0; color: #5b6676; font-size: 15px; max-width: 680px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 20px; padding: 20px; max-width: 1200px; margin: 0 auto; }
+  .card { background: var(--bg); border-radius: 20px 6px 20px 6px; padding: 18px; box-shadow: 0 1px 2px rgba(0,0,0,.06), 0 8px 24px rgba(20,32,43,.08); }
+  .card h2 { margin: 0; font-size: 19px; font-weight: 800; display: flex; align-items: baseline; gap: 8px; }
+  .card h2 span { font-size: 13px; font-weight: 600; color: var(--muted); }
+  .card .why { font-size: 13px; color: #5b6676; margin: 6px 0 14px; line-height: 1.45; min-height: 38px; }
+  .row-label { font-size: 10.5px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; margin: 14px 0 8px; }
+  .pins { display: flex; gap: 10px; }
+  .pin { width: 44px; height: 50px; position: relative; }
+  .chips, .acts { display: flex; gap: 8px; flex-wrap: wrap; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 11px; border-radius: 11px 4px 11px 4px; background: #fff; font-size: 13px; font-weight: 600; color: #475467; box-shadow: 0 1px 2px rgba(0,0,0,.06); }
+  .chip.on { background: var(--navy); color: #fff; }
+  .nav { display: flex; justify-content: space-around; background: #fff; border-radius: 14px 4px 14px 4px; padding: 8px 0 6px; }
+  .nav div { display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 11px; font-weight: 700; color: #A3ADBB; }
+  .nav div.on { color: var(--navy); }
+  .btn { display: inline-flex; align-items: center; gap: 8px; height: 42px; padding: 0 14px 0 8px; border-radius: 14px 4px 14px 4px; font-weight: 700; font-size: 14px; background: linear-gradient(180deg, #3386F5, var(--blue)); color: #fff; box-shadow: 0 3px 0 var(--deep); }
+  .btn.o { background: #fff; color: var(--ink); box-shadow: 0 3px 0 var(--line); border: 2px solid var(--line); }
+  .btn .tile { width: 28px; height: 28px; display: grid; place-items: center; border-radius: 9px 3px 9px 3px; background: rgba(255,255,255,.2); }
+  .btn.o .tile { background: #EAF2FD; color: var(--blue); }
+  svg.i { display: block; overflow: visible; }
+  .pick { margin-top: 16px; font-size: 13px; font-weight: 700; color: var(--blue); }
+</style>
+</head>
+<body>
+<header>
+  <h1>Madeira Quest · 6 icon styles</h1>
+  <p>Same symbols, six different styles – shown where they appear in the app: map pins, filters, navigation and buttons. Tell me the letter you like (or a mix, e.g. “D for pins, B for the rest”).</p>
+</header>
+<div class="grid" id="grid"></div>
+
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <filter id="rough" x="-10%" y="-10%" width="120%" height="120%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="2" seed="4" />
+      <feDisplacementMap in="SourceGraphic" scale="1.6" />
+    </filter>
+  </defs>
+</svg>
+
+<script>
+  // each icon = list of parts: [svg element, kind]  kind: "f" = fillable shape, "l" = line, "c" = cut-out detail
+  const P = (d, k = "l") => [`<path d="${d}"/>`, k];
+  const C = (cx, cy, r, k = "l") => [`<circle cx="${cx}" cy="${cy}" r="${r}"/>`, k];
+  const R = (x, y, w, h, rx, k = "l") => [`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${rx}"/>`, k];
+  const I = {
+    coffee:  [P("M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z", "f"), P("M17 8h1a4 4 0 1 1 0 8h-1"), P("M6 2v2M10 2v2M14 2v2")],
+    beach:   [C(17, 6, 3, "f"), P("M2 13c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"), P("M2 19c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1")],
+    bar:     [P("m19 3-7 8-7-8Z", "f"), P("M12 11v11M8 22h8"), C(16.5, 5.5, 1.6, "c")],
+    food:    [P("M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"), P("M7 2v20"), P("M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7", "f")],
+    ice:     [P("m7 11 4.08 10.35a1 1 0 0 0 1.84 0L17 11Z", "f"), P("M17 7A5 5 0 0 0 7 7"), P("M17 7a2 2 0 0 1 0 4H7a2 2 0 0 1 0-4Z", "f")],
+    map:     [P("M14.1 6.3 9.9 4.2a2 2 0 0 0-1.8 0L3.6 6.4A1 1 0 0 0 3 7.3v12.1a1 1 0 0 0 1.4.9l3.7-1.9a2 2 0 0 1 1.8 0l4.2 2.1a2 2 0 0 0 1.8 0l4.5-2.2a1 1 0 0 0 .6-.9V4.6a1 1 0 0 0-1.4-.9l-3.7 1.9a2 2 0 0 1-1.8 0Z", "f"), P("M15 5.8v15M9 3.2v15", "c")],
+    trophy:  [P("M6 4h12v5a6 6 0 0 1-12 0V4Z", "f"), P("M12 15v5M8 20h8"), P("M6 6H3v1a3 3 0 0 0 3 3M18 6h3v1a3 3 0 0 1-3 3")],
+    user:    [C(12, 8, 4, "f"), P("M4 21a8 8 0 0 1 16 0Z", "f")],
+    camera:  [P("M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3Z", "f"), C(12, 13, 3, "c")],
+    route:   [P("M3 11 22 2l-9 19-2-8Z", "f")],
+    star:    [P("M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4l-5.9 3.1 1.2-6.5L2.5 9.4l6.6-.9Z", "f")],
+    lock:    [R(3, 11, 18, 11, 2, "f"), P("M7 11V7a5 5 0 0 1 10 0v4"), C(12, 16.5, 1.3, "c")],
+  };
+  const CAT = [["coffee", "Cafés", "#C8642E"], ["beach", "Beaches", "#1E7FA8"], ["bar", "Bars", "#8E2C48"], ["food", "Food", "#5E7B3A"], ["ice", "Ice cream", "#E5746A"]];
+
+  // render one icon in a style
+  function icon(name, style, o = {}) {
+    const size = o.size || 22, color = o.color || "currentColor", bg = o.bg || "#fff", accent = o.accent || "var(--sun)";
+    const parts = I[name].map(([el, k]) => {
+      const a = (attrs) => el.replace(/^<(\w+)/, `<$1 ${attrs}`);
+      switch (style) {
+        case "outline": return a(`fill="none" stroke="${color}" stroke-width="2"`);
+        case "solid":   return k === "f" ? a(`fill="${color}" stroke="${color}" stroke-width="2"`) : k === "c" ? a(`fill="${bg}" stroke="${bg}" stroke-width="2"`) : a(`fill="none" stroke="${color}" stroke-width="2.6"`);
+        case "duo":     return (k === "f" ? a(`fill="${accent}" fill-opacity=".55" stroke="none" transform="translate(1.3 1.3)"`) : "") + a(`fill="none" stroke="${color}" stroke-width="2"`);
+        case "tile":    return a(`fill="${k === "f" ? "rgba(255,255,255,.28)" : "none"}" stroke="#fff" stroke-width="2.1"`);
+        case "sketch":  return (k === "f" ? a(`fill="${accent}" fill-opacity=".5" stroke="none" transform="translate(1.6 1.2) rotate(2 12 12)"`) : "") + a(`fill="none" stroke="${color}" stroke-width="2.1" filter="url(#rough)"`);
+        case "bubble":  return (k === "f" ? a(`fill="${color}" fill-opacity=".18" stroke="none"`) : "") + a(`fill="${k === "c" ? color : "none"}" stroke="${color}" stroke-width="2.6"`);
+      }
+    }).join("");
+    return `<svg class="i" width="${size}" height="${size}" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">${parts}</svg>`;
+  }
+
+  // how a map pin looks in each style
+  function pin(style, [name, , col]) {
+    const base = `position:absolute;left:4px;top:0;width:36px;height:36px;display:grid;place-items:center;`;
+    const tail = (c) => `<div style="position:absolute;left:50%;top:31px;width:10px;height:10px;transform:translateX(-50%) rotate(45deg);background:${c};border-right:2px solid #fff;border-bottom:2px solid #fff"></div>`;
+    switch (style) {
+      case "outline": return `<div class="pin">${tail(col)}<div style="${base}border-radius:10px 3px 10px 3px;background:${col};border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.25)">${icon(name, "outline", { color: "#fff", size: 18 })}</div></div>`;
+      case "solid":   return `<div class="pin">${tail(col)}<div style="${base}border-radius:10px 3px 10px 3px;background:${col};border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.25)">${icon(name, "solid", { color: "#fff", bg: col, size: 18 })}</div></div>`;
+      case "duo":     return `<div class="pin">${tail("#fff")}<div style="${base}border-radius:10px 3px 10px 3px;background:#fff;border:2px solid ${col};box-shadow:0 2px 6px rgba(0,0,0,.2)">${icon(name, "duo", { color: col, size: 19 })}</div></div>`;
+      case "tile":    return `<div class="pin">${tail(col)}<div style="${base}border-radius:12px 4px 12px 4px;background:linear-gradient(160deg, ${col}cc, ${col});box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 3px 0 rgba(0,0,0,.25)">${icon(name, "tile", { size: 19 })}</div></div>`;
+      case "sketch":  return `<div class="pin">${tail("#FFFBF2")}<div style="${base}border-radius:10px 3px 10px 3px;background:#FFFBF2;border:2px solid ${col};box-shadow:2px 2px 0 ${col}">${icon(name, "sketch", { color: col, size: 20 })}</div></div>`;
+      case "bubble":  return `<div class="pin">${tail(col)}<div style="${base}border-radius:50%;background:#fff;border:3px solid ${col};box-shadow:0 3px 0 ${col}">${icon(name, "bubble", { color: col, size: 19 })}</div></div>`;
+    }
+  }
+  function ui(style, name, active) {
+    if (style === "tile") return `<span style="display:grid;place-items:center;width:24px;height:24px;border-radius:8px 3px 8px 3px;background:${active ? "var(--blue)" : "#B5BFCC"}">${icon(name, "tile", { size: 15 })}</span>`;
+    if (style === "bubble") return `<span style="display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:${active ? "#DDEBFF" : "#EEF1F5"}">${icon(name, "bubble", { size: 16, color: active ? "var(--blue)" : "#8E99A8" })}</span>`;
+    return icon(name, style, { size: 22 });
+  }
+
+  const STYLES = [
+    ["outline", "A · Outline", "current", "Thin, even lines. Clean and neutral, but can feel a bit technical and “empty”."],
+    ["solid", "B · Solid", "filled · bold", "Filled shapes like iOS/SF Symbols. Strong, readable at small sizes, very calm and premium."],
+    ["duo", "C · Duotone", "line + gold fill", "Line icon with an offset gold fill. Friendly and warm, gives the blue UI a sunny Madeira touch."],
+    ["tile", "D · App tiles", "white on coloured tile", "Each symbol sits in its own coloured tile like an app icon. Colourful, playful, great on the map."],
+    ["sketch", "E · Hand-drawn", "sketchy + marker", "Wobbly pen line with a highlighter fill – like your paper sketches. Personal, student-made feel."],
+    ["bubble", "F · Bubble", "round · chunky", "Thick rounded strokes in soft circles, game-like (think Duolingo). Very playful and touch-friendly."],
+  ];
+
+  document.getElementById("grid").innerHTML = STYLES.map(([st, title, sub, why]) => `
+    <section class="card">
+      <h2>${title} <span>${sub}</span></h2>
+      <p class="why">${why}</p>
+      <div class="row-label">Map pins</div>
+      <div class="pins">${CAT.map((c) => pin(st, c)).join("")}</div>
+      <div class="row-label">Filters</div>
+      <div class="chips">${CAT.slice(0, 3).map(([n, l], i) => `<span class="chip ${i === 0 ? "on" : ""}">${st === "tile" || st === "bubble" ? ui(st, n, i === 0) : icon(n, st, { size: 17, color: i === 0 ? "#fff" : "currentColor", bg: i === 0 ? "#0E2A47" : "#fff" })}${l}</span>`).join("")}</div>
+      <div class="row-label">Navigation</div>
+      <div class="nav">${[["map", "Map"], ["trophy", "Quests"], ["user", "Profile"]].map(([n, l], i) => `<div class="${i === 0 ? "on" : ""}">${ui(st, n, i === 0)}${l}</div>`).join("")}</div>
+      <div class="row-label">Buttons</div>
+      <div class="acts">
+        <span class="btn"><span class="tile">${icon("camera", st === "tile" || st === "bubble" ? "outline" : st, { size: 17, color: "#fff", bg: "#2a7af0", accent: "rgba(255,255,255,.5)" })}</span>Upload photo</span>
+        <span class="btn o"><span class="tile">${icon("route", st === "tile" || st === "bubble" ? (st === "tile" ? "solid" : "bubble") : st, { size: 17, color: "#1D6FE8" })}</span>Route</span>
+        <span class="btn o"><span class="tile">${icon("star", st === "tile" ? "solid" : st, { size: 17, color: "#E7A417" })}</span>Save</span>
+        <span class="btn o"><span class="tile" style="color:#8590A0">${icon("lock", st === "tile" ? "solid" : st, { size: 17, color: "#8590A0", bg: "#EAF2FD" })}</span>Locked</span>
+      </div>
+    </section>`).join("");
+</script>
+</body>
+</html>
