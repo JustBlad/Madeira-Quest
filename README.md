@@ -9,7 +9,7 @@ laden ein Foto hoch, schalten damit die geteilte Galerie frei und bewerten den O
 - **Ortsseite** (wie Skizze): Name + Stern (merken), Bilder, Bewertung, Beschreibung, „Foto hochladen“
 - **Foto hochladen → Galerie freischalten** (vorher verschwommen + Schloss), danach bewerten
 - **Level 1 / Level 2**: Level 2 wird nach 4 besuchten Level-1-Orten freigeschaltet
-- **Gamification**: Punkte (**5 pro besuchtem Ort, 1 pro Bewertung**), Rangliste nach Punkten, Abzeichen, **Wochen-Streak** (jede Woche mind. 1 Ort) mit Countdown bis Sonntag
+- **Gamification**: Punkte (**5 pro besuchtem Ort, 1 pro Bewertung**), Rangliste nach Punkten, **Wochen-Streak** (jede Woche mind. 1 Ort) mit Countdown bis Sonntag
 
 ### Persuasive-Prinzipien
 | Prinzip | Umsetzung |

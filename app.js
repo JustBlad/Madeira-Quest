@@ -808,7 +808,7 @@
         </div>
         ${v.length
           ? `<div class="social-proof">${avatarsHTML(v, 4)}<span><b>${plural(v.length, "student", "students")}</b> from your group ${v.length === 1 ? "has" : "have"} been here</span></div>`
-          : `<div class="social-proof">${ic("sprout")}<span>Nobody has been here yet – <b>be the first</b> and earn the Pioneer badge!</span></div>`}
+          : `<div class="social-proof">${ic("sprout")}<span>Nobody has been here yet – <b>be the first</b> to discover it!</span></div>`}
         <a class="btn btn-ghost btn-block" href="${routeURL(p)}" target="_blank" rel="noopener" style="margin-bottom:18px">${ic("nav")} Directions in Google Maps</a>
 
         ${action}
@@ -975,17 +975,6 @@
       .sort((a, b) => b.points - a.points || a.name.localeCompare(b.name)); // ranked by points
     const myRank = board.findIndex((b) => b.me) + 1;
     const above = board[myRank - 2];
-    const has = (cat) => visited.some((p) => p.cat === cat);
-    const badges = [
-      ["flag", "First step", "#1D6FE8", visited.length >= 1],
-      ["coffee", "Café fan", "#C8642E", has("cafe")],
-      ["waves", "Beach lover", "#1E7FA8", has("beach")],
-      ["martini", "Poncha pro", "#8E2C48", has("bar")],
-      ["pin", "On site", "#1D6FE8", visited.some((p) => state.visits[p.id].verified)],
-      ["sprout", "Pioneer", "#5E7B3A", visited.some((p) => !(community.visitors[p.id] || []).some((x) => (x.ts || 0) < state.visits[p.id].ts))],
-      ["unlock", "Explorer", "#0E2A47", PLACES.some((p) => p.level === 2 && isVisited(p.id))],
-      ["award", "Madeira master", "#E7A417", visited.length === PLACES.length],
-    ];
     const photos = visited.filter((p) => state.visits[p.id].photo);
     const shown = board.slice(0, 15);
     if (!shown.some((b) => b.me)) shown.push(board[myRank - 1]);
@@ -1011,8 +1000,6 @@
             : `<div class="social-proof">${ic("award")}<span><b>You're #1!</b> Keep going to stay on top.</span></div>`}
         <div class="leader">${shown.map((b) => { const i = board.indexOf(b); return `<div class="leader-row ${b.me ? "me" : ""}"><span class="rank">${i + 1}</span>${avatarHTML(b.name, b.color)}<span class="who">${esc(b.name)} ${b.flag || ""}${b.me ? " (you)" : ""}</span><span class="pts">${Number(b.points) || 0}</span></div>`; }).join("")}</div>
 
-        <div class="section-title">Badges <small>${badges.filter((b) => b[3]).length}/${badges.length}</small></div>
-        <div class="badges">${badges.map(([i, l, col, on]) => `<div class="badge ${on ? "" : "off"}">${tile(i, on ? col : "var(--tile-off)", "xl")}${l}</div>`).join("")}</div>
 
         <div class="section-title">My photos <small>${photos.length}</small></div>
         ${photos.length ? `<div class="my-photos">${photos.map((p) => `<a class="ph" href="#/place/${p.id}"><img src="${state.visits[p.id].photo}" alt="${esc(p.name)}"></a>`).join("")}</div>` : `<div class="empty">No photos yet. Pick a place on the map!</div>`}
