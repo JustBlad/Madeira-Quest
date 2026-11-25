@@ -26,7 +26,7 @@
   });
 
   let state = load();
-  if (state.mapStyleV !== 2) { state.mapStyle = "streets"; state.mapStyleV = 2; } // new default after style update
+  if (state.mapStyleV !== 3) { state.mapStyle = "dataviz"; state.mapStyleV = 3; } // default after style update: Light
   // ---------- Theme (auto / light / dark) ----------
   const darkMQ = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null;
   const isDark = () => (state.theme || "auto") === "dark" || ((state.theme || "auto") === "auto" && darkMQ && darkMQ.matches);
@@ -35,7 +35,7 @@
     document.documentElement.dataset.theme = dark ? "dark" : "light";
     const meta = document.querySelector('meta[name="theme-color"]');
     if (meta) meta.content = dark ? "#0B1420" : "#0E2A47";
-    if (typeof mapApi !== "undefined" && mapApi) setMapStyle(state.mapStyle || "streets"); // swap to light/dark map tiles
+    if (typeof mapApi !== "undefined" && mapApi) setMapStyle(state.mapStyle || "dataviz"); // swap to light/dark map tiles
   }
   if (darkMQ && darkMQ.addEventListener) darkMQ.addEventListener("change", () => { if ((state.theme || "auto") === "auto") applyTheme(); });
 
@@ -480,12 +480,9 @@
 
   // Map styles the user can pick (layer button). "sat" = satellite with labels.
   const MAP_STYLES = [
-    { id: "streets", name: "Streets",   mt: "streets-v2", dark: "streets-v2-dark", hint: "Classic, Google-like",  sw: ["#F5F3EE", "#FFFFFF", "#F2C94C"] },
-    { id: "bright",  name: "Bright",    mt: "bright-v2",  dark: "streets-v2-dark", hint: "Colourful & friendly",   sw: ["#F8F4EC", "#FFD86B", "#8FD0F0"] },
-    { id: "basic",   name: "Minimal",   mt: "basic-v2",   dark: "basic-v2-dark", hint: "Clean, few details",     sw: ["#F3F1EC", "#FFFFFF", "#CFE4EE"] },
-    { id: "dataviz", name: "Light",     mt: "dataviz",    dark: "dataviz-dark", hint: "Very calm, pins stand out", sw: ["#F6F6F4", "#E9E9E6", "#D5E4EC"] },
-    { id: "outdoor", name: "Outdoor",   mt: "outdoor-v2", dark: "outdoor-v2-dark", hint: "Hills & hiking paths",   sw: ["#EEF0E4", "#C9DDB0", "#9CC8E0"] },
-    { id: "sat",     name: "Satellite", mt: "hybrid",     hint: "Photo with street names", sw: ["#3B5A3A", "#6E8B5A", "#1E5A7A"], ext: "jpg" },
+    { id: "dataviz", name: "Light",     mt: "dataviz",   dark: "dataviz-dark",    hint: "Calm & clean, pins stand out", sw: ["#F6F6F4", "#E9E9E6", "#D5E4EC"] },
+    { id: "bright",  name: "Bright",    mt: "bright-v2", dark: "streets-v2-dark", hint: "Colourful & friendly",         sw: ["#F8F4EC", "#FFD86B", "#8FD0F0"] },
+    { id: "sat",     name: "Satellite", mt: "hybrid",                             hint: "Photo with street names",      sw: ["#3B5A3A", "#6E8B5A", "#1E5A7A"], ext: "jpg" },
   ];
   const styleById = (id) => MAP_STYLES.find((x) => x.id === id) || MAP_STYLES[0];
 
@@ -518,14 +515,14 @@
   function afterMapReady() {
     PLACES.forEach((p) => mapApi.addMarker(p.id, p.lat, p.lng, markerHTML(p), () => selectPlace(p.id)));
     mapApi.onMapClick(closeSheet);
-    setMapStyle(state.mapStyle || "streets");
+    setMapStyle(state.mapStyle || "dataviz");
     applyFilter();
     updateMe();
     if (!userPos) setTimeout(goFunchal, 50); // start with all places in view
   }
   function setMapStyle(style) {
     if (!mapApi) return;
-    if (style === "map") style = "streets"; // old saved value
+    if (!MAP_STYLES.some((x) => x.id === style)) style = MAP_STYLES[0].id; // old/removed saved value
     const st = styleById(style);
     mapApi.setStyle(st.id);
     state.mapStyle = st.id; save();
@@ -536,7 +533,7 @@
   }
   function renderStyleMenu() {
     const menu = $("#styleMenu"); if (!menu) return;
-    const list = mapApi && mapApi.kind === "google" ? MAP_STYLES.filter((x) => x.id === "streets" || x.id === "sat") : MAP_STYLES;
+    const list = mapApi && mapApi.kind === "google" ? MAP_STYLES.filter((x) => x.id === "dataviz" || x.id === "sat") : MAP_STYLES;
     menu.innerHTML = `<div class="sm-title">Map style</div>` + list.map((x) => `
       <button class="sm-item ${state.mapStyle === x.id ? "on" : ""}" data-style="${x.id}">
         <span class="sm-sw">${x.sw.map((c) => `<i style="background:${c}"></i>`).join("")}</span>
