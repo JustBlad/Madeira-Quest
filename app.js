@@ -27,6 +27,18 @@
 
   let state = load();
   if (state.mapStyleV !== 2) { state.mapStyle = "streets"; state.mapStyleV = 2; } // new default after style update
+  // ---------- Theme (auto / light / dark) ----------
+  const darkMQ = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null;
+  const isDark = () => (state.theme || "auto") === "dark" || ((state.theme || "auto") === "auto" && darkMQ && darkMQ.matches);
+  function applyTheme() {
+    const dark = isDark();
+    document.documentElement.dataset.theme = dark ? "dark" : "light";
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.content = dark ? "#0B1420" : "#0E2A47";
+    if (typeof mapApi !== "undefined" && mapApi) setMapStyle(state.mapStyle || "streets"); // swap to light/dark map tiles
+  }
+  if (darkMQ && darkMQ.addEventListener) darkMQ.addEventListener("change", () => { if ((state.theme || "auto") === "auto") applyTheme(); });
+
   let userPos = null;      // { lat, lng, acc }
   let geoWatchId = null;
   let mapInited = false;
@@ -156,6 +168,9 @@
     arrow: '<path d="M5 12h14M12 5l7 7-7 7"/>',
     clock: '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>',
     bulb: '<path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6M10 22h4"/>',
+    sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+    moon: '<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>',
+    auto: '<rect width="14" height="20" x="5" y="2" rx="2"/><path d="M12 18h.01"/>',
     image: '<rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/>',
   };
   const ic = (name, cls = "") => `<svg class="ic ${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[name] || ""}</svg>`;
@@ -438,11 +453,11 @@
 
   // Map styles the user can pick (layer button). "sat" = satellite with labels.
   const MAP_STYLES = [
-    { id: "streets", name: "Streets",   mt: "streets-v2", hint: "Classic, Google-like",  sw: ["#F5F3EE", "#FFFFFF", "#F2C94C"] },
-    { id: "bright",  name: "Bright",    mt: "bright-v2",  hint: "Colourful & friendly",   sw: ["#F8F4EC", "#FFD86B", "#8FD0F0"] },
-    { id: "basic",   name: "Minimal",   mt: "basic-v2",   hint: "Clean, few details",     sw: ["#F3F1EC", "#FFFFFF", "#CFE4EE"] },
-    { id: "dataviz", name: "Light",     mt: "dataviz",    hint: "Very calm, pins stand out", sw: ["#F6F6F4", "#E9E9E6", "#D5E4EC"] },
-    { id: "outdoor", name: "Outdoor",   mt: "outdoor-v2", hint: "Hills & hiking paths",   sw: ["#EEF0E4", "#C9DDB0", "#9CC8E0"] },
+    { id: "streets", name: "Streets",   mt: "streets-v2", dark: "streets-v2-dark", hint: "Classic, Google-like",  sw: ["#F5F3EE", "#FFFFFF", "#F2C94C"] },
+    { id: "bright",  name: "Bright",    mt: "bright-v2",  dark: "streets-v2-dark", hint: "Colourful & friendly",   sw: ["#F8F4EC", "#FFD86B", "#8FD0F0"] },
+    { id: "basic",   name: "Minimal",   mt: "basic-v2",   dark: "basic-v2-dark", hint: "Clean, few details",     sw: ["#F3F1EC", "#FFFFFF", "#CFE4EE"] },
+    { id: "dataviz", name: "Light",     mt: "dataviz",    dark: "dataviz-dark", hint: "Very calm, pins stand out", sw: ["#F6F6F4", "#E9E9E6", "#D5E4EC"] },
+    { id: "outdoor", name: "Outdoor",   mt: "outdoor-v2", dark: "outdoor-v2-dark", hint: "Hills & hiking paths",   sw: ["#EEF0E4", "#C9DDB0", "#9CC8E0"] },
     { id: "sat",     name: "Satellite", mt: "hybrid",     hint: "Photo with street names", sw: ["#3B5A3A", "#6E8B5A", "#1E5A7A"], ext: "jpg" },
   ];
   const styleById = (id) => MAP_STYLES.find((x) => x.id === id) || MAP_STYLES[0];
@@ -531,6 +546,7 @@
       mapId: CONFIG.googleMapId || "DEMO_MAP_ID",
       mapTypeId: state.mapStyle === "sat" ? "hybrid" : "roadmap",
       disableDefaultUI: true, gestureHandling: "greedy", clickableIcons: false, tilt: 0,
+      colorScheme: isDark() ? "DARK" : "LIGHT",
     });
     // key rejected after the map was created (e.g. billing off) → swap to the backup map
     window.__mqOnAuthFail = () => { toast("Google Maps key rejected – using backup map"); el.innerHTML = ""; mapApi = leafletMap(el); afterMapReady(); };
@@ -567,7 +583,7 @@
     const m = L.map(el, { zoomControl: false, zoomSnap: 0.25, zoomDelta: 0.5, wheelPxPerZoomLevel: 90 }).setView(CONFIG.center, CONFIG.zoom);
     const mk = {}; let me = null, acc = null, layers = [], maptilerFailed = false;
     const icon = (html) => L.divIcon({ className: "", iconSize: [44, 46], iconAnchor: [22, 44], html });
-    const mtLayer = (st) => L.tileLayer(`https://api.maptiler.com/maps/${st.mt}/{z}/{x}/{y}{r}.${st.ext || "png"}?key=${CONFIG.maptilerKey}`, {
+    const mtLayer = (st) => L.tileLayer(`https://api.maptiler.com/maps/${isDark() && st.dark ? st.dark : st.mt}/{z}/{x}/{y}{r}.${st.ext || "png"}?key=${CONFIG.maptilerKey}`, {
       tileSize: 512, zoomOffset: -1, minZoom: 1, maxZoom: 20, crossOrigin: true,
       attribution: '&copy; <a href="https://www.maptiler.com/copyright/">MapTiler</a> &copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>',
     });
@@ -576,7 +592,7 @@
         L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", { maxZoom: 20, maxNativeZoom: 19, className: "sat-imagery", attribution: "Imagery &copy; Esri, Maxar &middot; Labels &copy; CARTO, OSM" }),
         L.tileLayer("https://{s}.basemap.cartocdn.com/rastertiles/dark_only_labels/{z}/{x}/{y}{r}.png", { maxZoom: 20, subdomains: "abcd", className: "sat-labels" }),
       ],
-      carto: () => [L.tileLayer("https://{s}.basemap.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", { maxZoom: 19, subdomains: "abcd", attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>' })],
+      carto: () => [L.tileLayer(`https://{s}.basemap.cartocdn.com/rastertiles/${isDark() ? "dark_all" : "voyager"}/{z}/{x}/{y}{r}.png`, { maxZoom: 19, subdomains: "abcd", attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>' })],
       osm: () => [L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' })],
     };
     const layersFor = (style) => {
@@ -976,6 +992,9 @@
 
         ${state.favorites.length ? `<div class="section-title">Saved <small>${state.favorites.length}</small></div><div class="place-list">${state.favorites.map(byId).filter(Boolean).map((p) => `<a class="place-row" href="#/place/${p.id}"><div class="pr-thumb ph">${thumbHTML(p)}</div><div class="pr-body"><b>${esc(p.name)}</b><small>${CATEGORIES[p.cat].label}</small></div><div class="pr-state ${isVisited(p.id) ? "done" : ""}">${ic(isVisited(p.id) ? "check" : "arrow")}</div></a>`).join("")}</div>` : ""}
 
+        <div class="section-title">Appearance</div>
+        <div class="seg" id="themeSeg">${[["auto", "auto", "Auto"], ["light", "sun", "Light"], ["dark", "moon", "Dark"]].map(([k, i, l]) => `<button data-theme-opt="${k}" class="${(state.theme || "auto") === k ? "on" : ""}">${ic(i)}${l}</button>`).join("")}</div>
+
         <div class="section-title">Settings</div>
         <div class="settings">
           <button id="geoSet"><span>${ic("pin")} Location ${userPos ? "on" : "– turn on"}</span><span>${ic(userPos ? "check" : "arrow")}</span></button>
@@ -985,6 +1004,11 @@
         <p class="note">Fair &amp; honest: you can only rate a place after uploading a photo there. Your location is only used on your phone to show distances and verify visits – it's never uploaded.${LIVE ? "" : " (Prototype: the other students are example data.)"}</p>
       </div>`;
     $("#geoSet").onclick = () => startGeo(true);
+    $("#themeSeg").onclick = (e) => {
+      const b = e.target.closest("[data-theme-opt]"); if (!b) return;
+      state.theme = b.dataset.themeOpt; save(); applyTheme();
+      keepScroll("#view-profile", renderProfile);
+    };
     $("#renameSet").onclick = () => {
       openModal(`<div class="m-ic">${ic("pencil")}</div><h2>New name</h2><label class="field"><input id="newName" maxlength="20" value="${esc(u.name)}"></label><div class="btns"><button class="btn btn-primary btn-block" id="saveName">Save</button></div>`);
       $("#saveName").onclick = () => { const n = $("#newName").value.trim(); if (n) { state.user.name = n; save(); syncUser(); } closeModal(); renderProfile(); };
@@ -1031,6 +1055,7 @@
   }
 
   function boot() {
+    applyTheme();
     $("#obLogo").innerHTML = LOGO;
     document.querySelectorAll("[data-ic]").forEach((el) => (el.innerHTML = ic(el.dataset.ic)));
     $("#fileInput").addEventListener("change", onFileChosen);
