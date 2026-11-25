@@ -168,13 +168,13 @@
     <path d="M14 82c6-14 18-20 30-22 8-10 20-14 32-10 12 2 22 10 30 22-10 10-28 14-46 14S20 90 14 82Z" fill="url(#lg-land)"/>
     <path d="M38 68l10-14 8 10 8-16 12 20" fill="none" stroke="#2E7D32" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
     <path d="M30 86c10 3 24 4 34 3" stroke="#fff" stroke-opacity=".6" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-    <path d="M60 8c-13 0-23 10-23 23 0 17 23 39 23 39s23-22 23-39C83 18 73 8 60 8Z" fill="#FF7A1A"/>
+    <path d="M60 8c-13 0-23 10-23 23 0 17 23 39 23 39s23-22 23-39C83 18 73 8 60 8Z" fill="#1D6FE8"/>
     <circle cx="60" cy="31" r="9" fill="#fff"/></svg>`;
 
   const PALETTES = {
     beach: [["#8FD8F5", "#FFE3B8"], ["#FFB27A", "#FFD9A8"], ["#6EC6EC", "#E9F7FF"], ["#FF9E7A", "#FFE0C2"]],
     cafe:  [["#FFE1C7", "#FFC79A"], ["#F6D5B8", "#E7B48A"], ["#FFEBD9", "#FFB98A"], ["#FDE4CF", "#F3B98C"]],
-    bar:   [["#3A1424", "#8E2C48"], ["#0E2A47", "#8E2C48"], ["#4A1A2D", "#F26B1D"], ["#0E2A47", "#1E7FA8"]],
+    bar:   [["#3A1424", "#8E2C48"], ["#0E2A47", "#8E2C48"], ["#4A1A2D", "#1D6FE8"], ["#0E2A47", "#1E7FA8"]],
     food:  [["#E5F6EA", "#BFE6C8"], ["#FFF1DC", "#F8D29A"], ["#E9F7EE", "#A9DDB8"], ["#FFF4E6", "#FFC98F"]],
     sweet: [["#FFE3F1", "#FFC1DD"], ["#FFF0E0", "#FFD0E4"], ["#E6F4FF", "#FFD6EA"], ["#FFF5D6", "#FFC7DF"]],
   };
@@ -237,7 +237,7 @@
   const modalOpen = () => !$("#modal").hidden;
   function confetti() {
     const c = document.createElement("div"); c.className = "confetti";
-    const colors = ["#FF7A1A", "#FFB000", "#2BB673", "#1FA2D6", "#F15BB5", "#9B5DE5"];
+    const colors = ["#1D6FE8", "#FFC23D", "#2BB673", "#5FB3FF", "#0E2A47", "#E5746A"];
     for (let i = 0; i < 70; i++) {
       const s = document.createElement("i");
       s.style.left = Math.random() * 100 + "%";
@@ -1048,7 +1048,7 @@
     const go = () => {
       const name = $("#obName").value.trim();
       if (!name) { $("#obName").focus(); toast("What should the others call you?"); return; }
-      const colors = ["#F26B1D", "#1E7FA8", "#5E7B3A", "#8E2C48", "#E5746A", "#0E2A47", "#C8642E", "#3D8C8C"];
+      const colors = ["#1D6FE8", "#1E7FA8", "#5E7B3A", "#8E2C48", "#E5746A", "#0E2A47", "#C8642E", "#3D8C8C"];
       state.user = { name, color: colors[Math.floor(Math.random() * colors.length)] };
       save();
       location.hash = "#/map";

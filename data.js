@@ -155,7 +155,7 @@ const PLACES = [
 
 /* ---------- Demo community (only without Firebase) ---------- */
 const DEMO_USERS = [
-  { name: "Sofia",  country: "🇪🇸", color: "#F26B1D", points: 640 },
+  { name: "Sofia",  country: "🇪🇸", color: "#1D6FE8", points: 640 },
   { name: "Luca",   country: "🇮🇹", color: "#1E7FA8", points: 520 },
   { name: "Emma",   country: "🇫🇷", color: "#E5746A", points: 455 },
   { name: "Jonas",  country: "🇩🇪", color: "#5E7B3A", points: 390 },
