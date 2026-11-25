@@ -173,7 +173,34 @@
     auto: '<rect width="14" height="20" x="5" y="2" rx="2"/><path d="M12 18h.01"/>',
     image: '<rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/>',
   };
-  const ic = (name, cls = "") => `<svg class="ic ${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[name] || ""}</svg>`;
+  ICONS.trophy = '<path d="M6 4h12v5a6 6 0 0 1-12 0V4Z"/><path d="M12 15v5M8 20h8M6 6H3v1a3 3 0 0 0 3 3M18 6h3v1a3 3 0 0 1-3 3"/>';
+  ICONS.user = '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>';
+  // Closed "body" shapes per icon. In the app-tile style they show as a soft
+  // filled layer behind the line drawing (see .ic .fl in styles.css).
+  const FILL = {
+    coffee: '<path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/>',
+    martini: '<path d="m19 3-7 8-7-8Z"/>',
+    utensils: '<path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Z"/>',
+    icecream: '<path d="m7 11 4.08 10.35a1 1 0 0 0 1.84 0L17 11Z"/><path d="M17 7A5 5 0 0 0 7 7a2 2 0 0 0 0 4h10a2 2 0 0 0 0-4Z"/>',
+    waves: '<circle cx="18" cy="4.5" r="2.2"/>',
+    grid: ICONS.grid,
+    map: '<path d="M14.1 6.3 9.9 4.2a2 2 0 0 0-1.8 0L3.6 6.4A1 1 0 0 0 3 7.3v12.1a1 1 0 0 0 1.4.9l3.7-1.9a2 2 0 0 1 1.8 0l4.2 2.1a2 2 0 0 0 1.8 0l4.5-2.2a1 1 0 0 0 .6-.9V4.6a1 1 0 0 0-1.4-.9l-3.7 1.9a2 2 0 0 1-1.8 0Z"/>',
+    globe: '<circle cx="12" cy="12" r="10"/>',
+    pin: '<path d="M20 10c0 5-5.5 10.2-7.4 11.8a1 1 0 0 1-1.2 0C9.5 20.2 4 15 4 10a8 8 0 0 1 16 0"/>',
+    star: ICONS.star, nav: ICONS.nav, flag: '<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1Z"/>',
+    lock: '<rect width="18" height="11" x="3" y="11" rx="2"/>', unlock: '<rect width="18" height="11" x="3" y="11" rx="2"/>',
+    camera: '<path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3Z"/>',
+    award: '<circle cx="12" cy="8" r="6"/>', flame: ICONS.flame, timer: '<circle cx="12" cy="14" r="8"/>', clock: '<circle cx="12" cy="12" r="10"/>',
+    trophy: '<path d="M6 4h12v5a6 6 0 0 1-12 0V4Z"/>', user: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0Z"/>',
+    users: '<circle cx="9" cy="7" r="4"/><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2Z"/>', target: '<circle cx="12" cy="12" r="10"/>',
+    pencil: ICONS.pencil, trash: '<path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6Z"/>', bulb: '<path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5Z"/>',
+    image: '<rect width="18" height="18" x="3" y="3" rx="2"/>', alert: '<path d="m21.7 18-8-14a2 2 0 0 0-3.5 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.7-3"/>',
+    sun: '<circle cx="12" cy="12" r="4"/>', moon: ICONS.moon, auto: '<rect width="14" height="20" x="5" y="2" rx="2"/>', sprout: '<path d="M9.5 9.4c1.1.8 1.8 2.2 2.3 3.7-2 .4-3.5.4-4.8-.3-1.2-.6-2.3-1.9-3-4.2 2.8-.5 4.4 0 5.5.8Z"/><path d="M14.1 6a7 7 0 0 0-1.1 4c1.9-.1 3.3-.6 4.3-1.4 1-1 1.6-2.3 1.7-4.6-2.7.1-4 1-4.9 2Z"/>',
+    anchor: '<circle cx="12" cy="5" r="3"/>',
+  };
+  const ic = (name, cls = "") => `<svg class="ic ${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${FILL[name] ? `<g class="fl">${FILL[name]}</g>` : ""}${ICONS[name] || ""}</svg>`;
+  // App-tile icon: white symbol on a coloured, slightly glossy tile
+  const tile = (name, color, cls = "") => `<span class="itile ${cls}"${color ? ` style="--t:${color}"` : ""}>${ic(name)}</span>`;
 
   // ---------- Art (illustrated placeholder pictures) ----------
   const LOGO = `<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
@@ -637,7 +664,7 @@
   function refreshMarkers() { if (mapApi) PLACES.forEach((p) => mapApi.updateMarker(p.id, markerHTML(p))); }
   function renderChips() {
     const chips = [["all", "All", "grid"], ...Object.entries(CATEGORIES).map(([k, c]) => [k, c.label, c.icon])];
-    $("#chips").innerHTML = chips.map(([k, l, e]) => `<button class="chip ${state.filter === k ? "active" : ""}" data-f="${k}">${ic(e)}${l}</button>`).join("");
+    $("#chips").innerHTML = chips.map(([k, l, e]) => `<button class="chip ${state.filter === k ? "active" : ""}" data-f="${k}">${tile(e, state.filter === k ? "var(--orange)" : "var(--tile-off)", "sm")}${l}</button>`).join("");
     $("#chips").onclick = (e) => {
       const b = e.target.closest(".chip"); if (!b) return;
       state.filter = b.dataset.f; save(); renderChips(); applyFilter(); closeSheet();
@@ -922,16 +949,16 @@
         </div>
         <div class="mini-cards">
           <div class="mini-card ${st.n && !st.today ? "warn" : ""}">
-            <div class="mc-ic">${ic("flame")}</div><b>${plural(st.n, "day", "days")}</b>
+            <div class="mc-ic">${tile("flame", "#E5746A")}</div><b>${plural(st.n, "day", "days")}</b>
             <small>${st.n && !st.today ? "Visit a place today or you'll lose your streak!" : st.today ? "Streak secured for today" : "Start your streak today"}</small>
           </div>
           <div class="mini-card">
-            <div class="mc-ic">${ic("pin")}</div><b>${PLACES.filter((p) => isVisited(p.id) && state.visits[p.id].verified).length}</b>
+            <div class="mc-ic">${tile("pin", "var(--orange)")}</div><b>${PLACES.filter((p) => isVisited(p.id) && state.visits[p.id].verified).length}</b>
             <small>visits verified on site</small>
           </div>
         </div>
         <div class="challenge">
-          <div class="ch-ic">${ic("timer")}</div>
+          <div class="ch-ic">${tile("timer", "#E7A417", "lg")}</div>
           <div><b>Weekly challenge</b><small>${Math.min(wk, goal)}/${goal} places this week · +${CONFIG.points.weekly} bonus</small></div>
           <div class="timer">${wk >= goal ? "Done" : countdown(endOfWeek())}<small>${wk >= goal ? "" : "left"}</small></div>
         </div>
@@ -950,14 +977,14 @@
     const above = board[myRank - 2];
     const has = (cat) => visited.some((p) => p.cat === cat);
     const badges = [
-      ["flag", "First step", visited.length >= 1],
-      ["coffee", "Café fan", has("cafe")],
-      ["waves", "Beach lover", has("beach")],
-      ["martini", "Poncha pro", has("bar")],
-      ["pin", "On site", visited.some((p) => state.visits[p.id].verified)],
-      ["sprout", "Pioneer", visited.some((p) => !(community.visitors[p.id] || []).some((x) => (x.ts || 0) < state.visits[p.id].ts))],
-      ["unlock", "Level 2", level1Done() >= CONFIG.level2Unlock],
-      ["award", "Madeira master", visited.length === PLACES.length],
+      ["flag", "First step", "#1D6FE8", visited.length >= 1],
+      ["coffee", "Café fan", "#C8642E", has("cafe")],
+      ["waves", "Beach lover", "#1E7FA8", has("beach")],
+      ["martini", "Poncha pro", "#8E2C48", has("bar")],
+      ["pin", "On site", "#1D6FE8", visited.some((p) => state.visits[p.id].verified)],
+      ["sprout", "Pioneer", "#5E7B3A", visited.some((p) => !(community.visitors[p.id] || []).some((x) => (x.ts || 0) < state.visits[p.id].ts))],
+      ["unlock", "Level 2", "#0E2A47", level1Done() >= CONFIG.level2Unlock],
+      ["award", "Madeira master", "#E7A417", visited.length === PLACES.length],
     ];
     const photos = visited.filter((p) => state.visits[p.id].photo);
     const shown = board.slice(0, 15);
@@ -984,8 +1011,8 @@
             : `<div class="social-proof">${ic("award")}<span><b>You're #1!</b> Keep going to stay on top.</span></div>`}
         <div class="leader">${shown.map((b) => { const i = board.indexOf(b); return `<div class="leader-row ${b.me ? "me" : ""}"><span class="rank">${i + 1}</span>${avatarHTML(b.name, b.color)}<span class="who">${esc(b.name)} ${b.flag || ""}${b.me ? " (you)" : ""}</span><span class="pts">${Number(b.points) || 0}</span></div>`; }).join("")}</div>
 
-        <div class="section-title">Badges <small>${badges.filter((b) => b[2]).length}/${badges.length}</small></div>
-        <div class="badges">${badges.map(([i, l, on]) => `<div class="badge ${on ? "" : "off"}"><div class="b-ic">${ic(i)}</div>${l}</div>`).join("")}</div>
+        <div class="section-title">Badges <small>${badges.filter((b) => b[3]).length}/${badges.length}</small></div>
+        <div class="badges">${badges.map(([i, l, col, on]) => `<div class="badge ${on ? "" : "off"}">${tile(i, on ? col : "var(--tile-off)", "xl")}${l}</div>`).join("")}</div>
 
         <div class="section-title">My photos <small>${photos.length}</small></div>
         ${photos.length ? `<div class="my-photos">${photos.map((p) => `<a class="ph" href="#/place/${p.id}"><img src="${state.visits[p.id].photo}" alt="${esc(p.name)}"></a>`).join("")}</div>` : `<div class="empty">No photos yet. Pick a place on the map!</div>`}
@@ -1058,6 +1085,7 @@
     applyTheme();
     $("#obLogo").innerHTML = LOGO;
     document.querySelectorAll("[data-ic]").forEach((el) => (el.innerHTML = ic(el.dataset.ic)));
+    document.querySelectorAll("[data-tile]").forEach((el) => (el.outerHTML = tile(el.dataset.tile, el.dataset.color || (el.classList.contains("nav-t") ? null : "var(--orange)"), el.className)));
     $("#fileInput").addEventListener("change", onFileChosen);
     window.addEventListener("hashchange", route);
 

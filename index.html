@@ -25,7 +25,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <link rel="stylesheet" href="styles.css?v=202611252322" />
+  <link rel="stylesheet" href="styles.css?v=202611252329" />
 </head>
 <body>
   <div id="app">
@@ -37,9 +37,9 @@
         <p class="ob-sub">Explore Funchal with your Erasmus group. Visit places, upload a photo and unlock everyone else's pictures.</p>
 
         <ul class="ob-points">
-          <li><span class="ob-ic" data-ic="pin"></span><div><b>Discover places</b><small>Cafés, beaches &amp; bars in Funchal</small></div></li>
-          <li><span class="ob-ic" data-ic="camera"></span><div><b>Upload a photo</b><small>…and unlock the shared gallery</small></div></li>
-          <li><span class="ob-ic" data-ic="award"></span><div><b>Collect points</b><small>Who visits the most places?</small></div></li>
+          <li><span class="ob lg" data-tile="pin" data-color="#1D6FE8"></span><div><b>Discover places</b><small>Cafés, beaches &amp; bars in Funchal</small></div></li>
+          <li><span class="ob lg" data-tile="camera" data-color="#E5746A"></span><div><b>Upload a photo</b><small>…and unlock the shared gallery</small></div></li>
+          <li><span class="ob lg" data-tile="award" data-color="#E7A417"></span><div><b>Collect points</b><small>Who visits the most places?</small></div></li>
         </ul>
 
         <label class="field">
@@ -81,18 +81,9 @@
 
     <!-- BOTTOM NAV -->
     <nav class="tabbar" id="tabbar" hidden>
-      <a href="#/map" data-tab="map">
-        <svg viewBox="0 0 24 24"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M9 4v14M15 6v14" stroke="currentColor" stroke-width="2"/></svg>
-        <span>Map</span>
-      </a>
-      <a href="#/quests" data-tab="quests">
-        <svg viewBox="0 0 24 24"><path d="M5 4h14v5a7 7 0 0 1-14 0V4Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M12 16v4M8 20h8M5 6H2v2a3 3 0 0 0 3 3M19 6h3v2a3 3 0 0 1-3 3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-        <span>Quests</span>
-      </a>
-      <a href="#/profile" data-tab="profile">
-        <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" fill="none" stroke="currentColor" stroke-width="2"/><path d="M4 21a8 8 0 0 1 16 0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-        <span>Profile</span>
-      </a>
+      <a href="#/map" data-tab="map"><span class="nav-t" data-tile="map"></span><span>Map</span></a>
+      <a href="#/quests" data-tab="quests"><span class="nav-t" data-tile="trophy"></span><span>Quests</span></a>
+      <a href="#/profile" data-tab="profile"><span class="nav-t" data-tile="user"></span><span>Profile</span></a>
     </nav>
 
     <!-- hidden file input for uploads -->
@@ -102,8 +93,8 @@
   </div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="data.js?v=202611252322"></script>
-  <script src="firebase-config.js?v=202611252322"></script>
-  <script src="app.js?v=202611252322"></script>
+  <script src="data.js?v=202611252329"></script>
+  <script src="firebase-config.js?v=202611252329"></script>
+  <script src="app.js?v=202611252329"></script>
 </body>
 </html>
