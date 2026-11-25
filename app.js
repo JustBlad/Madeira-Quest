@@ -73,7 +73,7 @@
   const byId = (id) => PLACES.find((p) => p.id === id);
   const isVisited = (id) => !!state.visits[id];
   const level1Done = () => PLACES.filter((p) => p.level === 1 && isVisited(p.id)).length;
-  const isUnlocked = (p) => p.level === 1 || level1Done() >= CONFIG.level2Unlock;
+  const isUnlocked = (p) => !CONFIG.lockLevels || p.level === 1 || level1Done() >= CONFIG.level2Unlock;
   const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
   const safeColor = (c) => (/^#[0-9a-fA-F]{3,8}$/.test(c || "") ? c : "#999");
   const safeImg = (src) => (/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(src || "") ? src : "");
@@ -492,8 +492,8 @@
   function markerHTML(p) {
     const c = CATEGORIES[p.cat], { avg } = avgRating(p.id);
     const cls = ["mq-marker", isVisited(p.id) && "visited", !isUnlocked(p) && "locked", selectedId === p.id && "selected"].filter(Boolean).join(" ");
-    const label = !isUnlocked(p) ? ic("lock", "ic-xs") : avg ? `★ ${avg.toFixed(1)}` : "new";
-    return `<div class="${cls}" style="--c:${c.color}"><div class="mq-pin"></div><div class="mq-pin-ic">${ic(c.icon)}</div><div class="mq-rating">${label}</div></div>`;
+    const label = !isUnlocked(p) ? ic("lock", "ic-xs") : avg ? `<b class="st">★</b>${avg.toFixed(1)}` : "new";
+    return `<div class="${cls}" style="--c:${c.color}"><div class="mq-pin"></div><div class="mq-pin-ic">${ic(c.icon)}</div><div class="mq-rating">${label}</div>${isVisited(p.id) ? `<div class="mq-done">${ic("check")}</div>` : ""}</div>`;
   }
   const ME_HTML = '<div class="mq-me"></div>';
 
@@ -891,7 +891,7 @@
     $("#confirmUp").onclick = async () => {
       const btn = $("#confirmUp"); btn.disabled = true; btn.textContent = "Uploading…";
       const shared = $("#shareChk").checked, caption = $("#capInput").value.trim();
-      const wasL2Locked = level1Done() < CONFIG.level2Unlock;
+      const wasL2Locked = CONFIG.lockLevels && level1Done() < CONFIG.level2Unlock;
       state.visits[id] = { photo: data, ts: Date.now(), verified, shared, caption };
       state.points += pts;
       const wk = startOfWeek().getTime();
@@ -922,7 +922,7 @@
     const levelBlock = (lvl) => {
       const list = PLACES.filter((p) => p.level === lvl);
       const done = list.filter((p) => isVisited(p.id)).length;
-      const locked = lvl > 1 && l1 < CONFIG.level2Unlock;
+      const locked = CONFIG.lockLevels && lvl > 1 && l1 < CONFIG.level2Unlock;
       return `<div class="level ${locked ? "locked" : ""}">
         <div class="level-head"><h2><span class="level-badge">${locked ? ic("lock", "ic-sm") : lvl}</span>Level ${lvl}</h2><small>${done}/${list.length}</small></div>
         ${locked
@@ -983,7 +983,7 @@
       ["martini", "Poncha pro", "#8E2C48", has("bar")],
       ["pin", "On site", "#1D6FE8", visited.some((p) => state.visits[p.id].verified)],
       ["sprout", "Pioneer", "#5E7B3A", visited.some((p) => !(community.visitors[p.id] || []).some((x) => (x.ts || 0) < state.visits[p.id].ts))],
-      ["unlock", "Level 2", "#0E2A47", level1Done() >= CONFIG.level2Unlock],
+      ["unlock", "Explorer", "#0E2A47", PLACES.some((p) => p.level === 2 && isVisited(p.id))],
       ["award", "Madeira master", "#E7A417", visited.length === PLACES.length],
     ];
     const photos = visited.filter((p) => state.visits[p.id].photo);

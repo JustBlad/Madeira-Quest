@@ -10,6 +10,7 @@ const CONFIG = {
   center: [32.6485, -16.9065],   // Funchal centre
   zoom: 15,
   checkinRadius: 200,            // metres: how close you must be for a "verified" visit
+  lockLevels: false,             // true = Level 2 only opens after some Level 1 places
   level2Unlock: 4,               // Level-1 places needed to unlock Level 2
   weeklyGoal: 3,                 // places per week for the weekly challenge
   points: { visit: 50, verified: 25, rating: 10, firstOfDay: 15, weekly: 100 },
