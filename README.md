@@ -5,11 +5,11 @@ laden ein Foto hoch, schalten damit die geteilte Galerie frei und bewerten den O
 
 ## Features
 - **Karte von Funchal** (Leaflet + OpenStreetMap/CARTO) mit Pins nach Kategorie und **Bewertung direkt auf der Karte**
-- **GPS**: fragt nach dem Standort, zeigt Entfernung + Gehzeit, verifiziert Besuche vor Ort (Bonuspunkte)
+- **GPS**: fragt nach dem Standort, zeigt Entfernung + Gehzeit, markiert Besuche als „vor Ort verifiziert“
 - **Ortsseite** (wie Skizze): Name + Stern (merken), Bilder, Bewertung, Beschreibung, „Foto hochladen“
 - **Foto hochladen → Galerie freischalten** (vorher verschwommen + Schloss), danach bewerten
 - **Level 1 / Level 2**: Level 2 wird nach 4 besuchten Level-1-Orten freigeschaltet
-- **Gamification**: Punkte, Abzeichen, Rangliste, Streak, Wochen-Challenge mit Countdown
+- **Gamification**: Punkte (**5 pro besuchtem Ort, 1 pro Bewertung**), Rangliste nach Punkten, Abzeichen, **Wochen-Streak** (jede Woche mind. 1 Ort) mit Countdown bis Sonntag
 
 ### Persuasive-Prinzipien
 | Prinzip | Umsetzung |
@@ -17,7 +17,7 @@ laden ein Foto hoch, schalten damit die geteilte Galerie frei und bewerten den O
 | Fogg (Motivation/Ability/Trigger) | Entfernung + „Route“-Button senken die Hürde, Streak-Hinweis als Trigger |
 | Social Proof | „X Studis aus deiner Gruppe waren schon hier“, Avatare, Rangliste |
 | Consistency | Fortschrittsbalken, Level-System, Serie |
-| Scarcity | gesperrte Galerie & Level 2, Wochen-Challenge mit echtem Countdown |
+| Scarcity | gesperrte Galerie bis zum eigenen Foto, Wochen-Countdown |
 | Loss Aversion | „Besuche heute einen Ort, sonst ist deine Serie weg!“ |
 | Default Effect | Teilen in der Galerie ist standardmäßig an, Standort-Abfrage beim Start |
 | Ethik | Bewerten nur nach Foto-Upload, echte Fristen, Standort bleibt auf dem Gerät |

@@ -113,18 +113,24 @@
   const dayKey = (ts) => { const d = new Date(ts); return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`; };
   const routeURL = (p) => `https://www.google.com/maps/dir/?api=1&travelmode=walking&destination=${p.lat},${p.lng}`;
 
-  function streak() {
-    const days = new Set(Object.values(state.visits).map((v) => dayKey(v.ts)));
-    if (!days.size) return { n: 0, today: false };
-    let n = 0; const d = new Date();
-    const today = days.has(dayKey(d));
-    if (!today) d.setDate(d.getDate() - 1);
-    while (days.has(dayKey(d))) { n++; d.setDate(d.getDate() - 1); }
-    return { n, today };
-  }
-  function startOfWeek() {
-    const d = new Date(); const day = (d.getDay() + 6) % 7; // Mon = 0
+  // Points: 5 per visited place, 1 per rating (only for places you visited)
+  const myPoints = () =>
+    Object.keys(state.visits).length * CONFIG.points.visit +
+    Object.keys(state.ratings).filter((id) => state.visits[id]).length * CONFIG.points.rating;
+
+  // Weekly streak: weeks in a row (Mon–Sun) with at least one visited place
+  function startOfWeek(at = new Date()) {
+    const d = new Date(at); const day = (d.getDay() + 6) % 7; // Mon = 0
     d.setDate(d.getDate() - day); d.setHours(0, 0, 0, 0); return d;
+  }
+  function streak() {
+    const weeks = new Set(Object.values(state.visits).map((v) => startOfWeek(v.ts).getTime()));
+    const d = startOfWeek();
+    const thisWeek = weeks.has(d.getTime());
+    if (!thisWeek) d.setDate(d.getDate() - 7);
+    let n = 0;
+    while (weeks.has(d.getTime())) { n++; d.setDate(d.getDate() - 7); }
+    return { n, thisWeek };
   }
   function endOfWeek() { const d = startOfWeek(); d.setDate(d.getDate() + 7); return new Date(d.getTime() - 1); }
   const weekVisits = () => { const s = startOfWeek().getTime(); return Object.values(state.visits).filter((v) => v.ts >= s).length; };
@@ -305,7 +311,7 @@
         return { uid: "demo-" + n, name: n, color: u.color, flag: u.country, ts: 0, caption: a.captions.length ? a.captions[i % a.captions.length] : "" };
       });
     });
-    community.users = DEMO_USERS.map((u) => ({ uid: "demo-" + u.name, name: u.name, color: u.color, flag: u.country, points: u.points }));
+    community.users = DEMO_USERS.map((u) => ({ uid: "demo-" + u.name, name: u.name, color: u.color, flag: u.country, points: PLACES.filter((p) => (DEMO_ACTIVITY[p.id] || { visitors: [] }).visitors.includes(u.name)).length * (CONFIG.points.visit + CONFIG.points.rating) }));
   }
 
   function loadScript(src) {
@@ -365,7 +371,7 @@
   function syncUser() {
     if (!db || !uid || !state.user) return;
     db.collection("users").doc(uid).set({
-      name: state.user.name, color: state.user.color, points: Math.round(state.points),
+      name: state.user.name, color: state.user.color, points: myPoints(),
       visited: Object.keys(state.visits).length, updatedAt: Date.now(),
     }).catch((e) => console.warn("user sync", e));
   }
@@ -463,12 +469,12 @@
     const d = distTo(p);
     if (d == null) {
       el.className = "gps-state";
-      el.innerHTML = `${ic("pin")} <a href="#" id="gpsAsk" style="text-decoration:underline">Turn on location</a> for the on-site bonus (+${CONFIG.points.verified})`;
+      el.innerHTML = `${ic("pin")} <a href="#" id="gpsAsk" style="text-decoration:underline">Turn on location</a> to verify your visit on site`;
       $("#gpsAsk").onclick = (e) => { e.preventDefault(); startGeo(true); };
     } else if (d <= CONFIG.checkinRadius) {
-      el.className = "gps-state ok"; el.innerHTML = `${ic("check")} You're here – verified visit (+${CONFIG.points.verified} bonus)`;
+      el.className = "gps-state ok"; el.innerHTML = `${ic("check")} You're here – your visit will be verified`;
     } else {
-      el.className = "gps-state"; el.textContent = `You're ${fmtDist(d)} away. Upload on site for +${CONFIG.points.verified} bonus points.`;
+      el.className = "gps-state"; el.textContent = `You're ${fmtDist(d)} away. Upload on site to get it verified.`;
     }
   }
 
@@ -772,7 +778,7 @@
         <div class="rate-box">
           <p>${my ? "Your rating" : "How was it?"}</p>
           <div class="rate-stars" id="rateStars">${[1, 2, 3, 4, 5].map((i) => `<button data-v="${i}" class="${i <= my ? "on" : ""}" aria-label="${i} stars">★</button>`).join("")}</div>
-          <small>${my ? "Tap to change your rating" : `Be honest – it helps everyone (+${CONFIG.points.rating} points)`}</small>
+          <small>${my ? "Tap to change your rating" : `Be honest – it helps everyone (+${CONFIG.points.rating} point)`}</small>
         </div>`;
     }
 
@@ -826,10 +832,9 @@
       const b = e.target.closest("button"); if (!b) return;
       const first = !state.ratings[id];
       state.ratings[id] = +b.dataset.v;
-      if (first) state.points += CONFIG.points.rating;
       save(); pushRating(id); refreshMarkers(); updateScore();
       keepScroll("#view-place", () => renderPlace(id, true));
-      toast(first ? `Thanks! +${CONFIG.points.rating} points` : "Rating updated");
+      toast(first ? `Thanks! +${CONFIG.points.rating} point` : "Rating updated");
     };
     updateGpsState(p);
 
@@ -871,11 +876,11 @@
     let data;
     try { data = await compressImage(file, LIVE ? 800 : 1000, LIVE ? 0.68 : 0.72); } catch (err) { toast(err.message); return; }
     const p = byId(id), d = distTo(p), verified = d != null && d <= CONFIG.checkinRadius;
-    const pts = CONFIG.points.visit + (verified ? CONFIG.points.verified : 0) + (streak().today ? 0 : CONFIG.points.firstOfDay);
+    const pts = CONFIG.points.visit;
     openModal(`
       <img class="preview" src="${data}" alt="Preview">
       <h2>${esc(p.name)}</h2>
-      <p>${verified ? "You're on site – your visit will be verified." : d == null ? "Location unknown – saved without the GPS bonus." : `You're ${fmtDist(d)} away – saved without the GPS bonus.`}</p>
+      <p>${verified ? "You're on site – your visit will be verified." : d == null ? "Location unknown – saved without on-site check." : `You're ${fmtDist(d)} away – saved without on-site check.`}</p>
       <label class="field"><input id="capInput" maxlength="40" placeholder="Add a caption (optional)"></label>
       <label style="display:flex;gap:10px;align-items:center;justify-content:center;margin-bottom:16px;font-size:14px;font-weight:600">
         <input type="checkbox" id="shareChk" checked style="width:20px;height:20px;accent-color:var(--orange)"> Share in the group gallery
@@ -889,11 +894,8 @@
       const btn = $("#confirmUp"); btn.disabled = true; btn.textContent = "Uploading…";
       const shared = $("#shareChk").checked, caption = $("#capInput").value.trim();
       const wasL2Locked = CONFIG.lockLevels && level1Done() < CONFIG.level2Unlock;
+      const streakBefore = streak();
       state.visits[id] = { photo: data, ts: Date.now(), verified, shared, caption };
-      state.points += pts;
-      const wk = startOfWeek().getTime();
-      const weeklyNow = weekVisits() >= CONFIG.weeklyGoal && !state.challengeWeeks.includes(wk);
-      if (weeklyNow) { state.challengeWeeks.push(wk); state.points += CONFIG.points.weekly; }
       if (!save()) { state.visits[id].photo = null; save(); }
       if (LIVE) {
         try { await pushVisit(id, data); }
@@ -907,7 +909,8 @@
           $("#toQuests").onclick = closeModal;
         }, 900);
       } else {
-        toast(weeklyNow ? `Weekly challenge done! +${pts + CONFIG.points.weekly} points` : `Gallery unlocked! +${pts} points`);
+        const st = streak();
+        toast(!streakBefore.thisWeek && st.n > 1 ? `Streak: ${st.n} weeks in a row! +${pts} points` : `Gallery unlocked! +${pts} points`);
       }
     };
   }
@@ -915,7 +918,7 @@
   // ---------- Quests page ----------
   function renderQuests() {
     const total = PLACES.length, visited = PLACES.filter((p) => isVisited(p.id)).length;
-    const st = streak(), wk = weekVisits(), goal = CONFIG.weeklyGoal, l1 = level1Done();
+    const st = streak(), wk = weekVisits(), l1 = level1Done();
     const levelBlock = (lvl) => {
       const list = PLACES.filter((p) => p.level === lvl);
       const done = list.filter((p) => isVisited(p.id)).length;
@@ -936,18 +939,18 @@
         }).join("")}</div></div>`;
     };
     $("#view-quests").innerHTML = `
-      <div class="page-head"><h1>Your quests</h1><p>Visit places, collect points, unlock levels.</p></div>
+      <div class="page-head"><h1>Your quests</h1><p>Visit places, collect points, keep your weekly streak.</p></div>
       <div class="page-pad">
         <div class="hero-card">
           <div class="hc-label">Places discovered</div>
           <div class="hc-big">${visited}<small> / ${total}</small></div>
           <div class="progress"><i style="width:${(visited / total) * 100}%"></i></div>
-          <div class="hc-row"><span>${state.points} points</span><span>${visited === total ? "All discovered!" : `${total - visited} to go`}</span></div>
+          <div class="hc-row"><span>${myPoints()} points</span><span>${visited === total ? "All discovered!" : `${total - visited} to go`}</span></div>
         </div>
         <div class="mini-cards">
-          <div class="mini-card ${st.n && !st.today ? "warn" : ""}">
-            <div class="mc-ic">${tile("flame", "#E5746A")}</div><b>${plural(st.n, "day", "days")}</b>
-            <small>${st.n && !st.today ? "Visit a place today or you'll lose your streak!" : st.today ? "Streak secured for today" : "Start your streak today"}</small>
+          <div class="mini-card ${st.n && !st.thisWeek ? "warn" : ""}">
+            <div class="mc-ic">${tile("flame", "#E5746A")}</div><b>${plural(st.n, "week", "weeks")}</b>
+            <small>${st.n && !st.thisWeek ? "Visit a place this week or you'll lose your streak!" : st.thisWeek ? "Streak secured for this week" : "Start your streak this week"}</small>
           </div>
           <div class="mini-card">
             <div class="mc-ic">${tile("pin", "var(--orange)")}</div><b>${PLACES.filter((p) => isVisited(p.id) && state.visits[p.id].verified).length}</b>
@@ -956,8 +959,8 @@
         </div>
         <div class="challenge">
           <div class="ch-ic">${tile("timer", "#E7A417", "lg")}</div>
-          <div><b>Weekly challenge</b><small>${Math.min(wk, goal)}/${goal} places this week · +${CONFIG.points.weekly} bonus</small></div>
-          <div class="timer">${wk >= goal ? "Done" : countdown(endOfWeek())}<small>${wk >= goal ? "" : "left"}</small></div>
+          <div><b>Weekly streak</b><small>${st.thisWeek ? `This week is done · ${plural(wk, "place", "places")} visited` : st.n ? `1 place before Sunday keeps your ${st.n}-week streak` : "Visit 1 place a week to build a streak"}</small></div>
+          <div class="timer">${st.thisWeek ? "Done" : countdown(endOfWeek())}<small>${st.thisWeek ? "" : "left"}</small></div>
         </div>
         ${levelBlock(1)}
         ${levelBlock(2)}
@@ -968,8 +971,8 @@
   function renderProfile() {
     const u = state.user, visited = PLACES.filter((p) => isVisited(p.id));
     const rated = Object.keys(state.ratings).length;
-    const board = community.users.map((x) => ({ ...x })).concat([{ name: u.name, color: u.color, flag: "", points: state.points, me: true }])
-      .sort((a, b) => b.points - a.points);
+    const board = community.users.map((x) => ({ ...x })).concat([{ name: u.name, color: u.color, flag: "", points: myPoints(), me: true }])
+      .sort((a, b) => b.points - a.points || a.name.localeCompare(b.name)); // ranked by points
     const myRank = board.findIndex((b) => b.me) + 1;
     const above = board[myRank - 2];
     const has = (cat) => visited.some((p) => p.cat === cat);
@@ -995,7 +998,7 @@
           <div><h2>${esc(u.name)}</h2><small>Rank ${myRank} of ${board.length} in your group</small></div>
         </div>
         <div class="stats">
-          <div class="stat"><b>${state.points}</b><small>Points</small></div>
+          <div class="stat"><b>${myPoints()}</b><small>Points</small></div>
           <div class="stat"><b>${visited.length}</b><small>Places</small></div>
           <div class="stat"><b>${rated}</b><small>Ratings</small></div>
         </div>
@@ -1004,7 +1007,7 @@
         ${board.length < 2
           ? `<div class="social-proof">${ic("users")}<span>You're the first one here – <b>share the link</b> with your Erasmus group!</span></div>`
           : above
-            ? `<div class="social-proof">${ic("target")}<span>Only <b>${above.points - state.points + 1} points</b> until you overtake ${esc(above.name)}!</span></div>`
+            ? `<div class="social-proof">${ic("target")}<span>Only <b>${plural(above.points - myPoints() + 1, "point", "points")}</b> until you overtake ${esc(above.name)}!</span></div>`
             : `<div class="social-proof">${ic("award")}<span><b>You're #1!</b> Keep going to stay on top.</span></div>`}
         <div class="leader">${shown.map((b) => { const i = board.indexOf(b); return `<div class="leader-row ${b.me ? "me" : ""}"><span class="rank">${i + 1}</span>${avatarHTML(b.name, b.color)}<span class="who">${esc(b.name)} ${b.flag || ""}${b.me ? " (you)" : ""}</span><span class="pts">${Number(b.points) || 0}</span></div>`; }).join("")}</div>
 
@@ -1049,7 +1052,7 @@
   }
 
   // ---------- Router ----------
-  function updateScore() { $("#scorePill").innerHTML = `${ic("star", "ic-fill")}${state.points}`; }
+  function updateScore() { $("#scorePill").innerHTML = `${ic("star", "ic-fill")}${myPoints()}`; }
   function show(viewId) { ["view-map", "view-place", "view-quests", "view-profile"].forEach((v) => ($("#" + v).hidden = v !== viewId)); }
   function route() {
     if (!state.user) return;
@@ -1104,7 +1107,7 @@
       location.hash = "#/map";
       startApp();
       setTimeout(() => {
-        openModal(`<div class="m-ic">${ic("pin")}</div><h2>Allow location?</h2><p>We'll show how far away each place is, and you get <b>+${CONFIG.points.verified} bonus points</b> when you take a photo on site.</p><div class="btns"><button class="btn btn-primary btn-block" id="geoYes">Allow location</button><button class="btn btn-outline btn-block" id="geoNo">Later</button></div>`);
+        openModal(`<div class="m-ic">${ic("pin")}</div><h2>Allow location?</h2><p>We'll show how far away each place is, and we can mark your visits as <b>verified on site</b>.</p><div class="btns"><button class="btn btn-primary btn-block" id="geoYes">Allow location</button><button class="btn btn-outline btn-block" id="geoNo">Later</button></div>`);
         $("#geoYes").onclick = () => { closeModal(); startGeo(true); };
         $("#geoNo").onclick = () => { closeModal(); state.geoAsked = true; save(); };
       }, 500);

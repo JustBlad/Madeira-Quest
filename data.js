@@ -12,8 +12,7 @@ const CONFIG = {
   checkinRadius: 200,            // metres: how close you must be for a "verified" visit
   lockLevels: false,             // true = Level 2 only opens after some Level 1 places
   level2Unlock: 4,               // Level-1 places needed to unlock Level 2
-  weeklyGoal: 3,                 // places per week for the weekly challenge
-  points: { visit: 50, verified: 25, rating: 10, firstOfDay: 15, weekly: 100 },
+  points: { visit: 5, rating: 1 },   // per visited place / per rating
   // Example students & photos for presentations.
   // Only used when NO Firebase config is set in firebase-config.js.
   demoCommunity: true,
@@ -156,14 +155,14 @@ const PLACES = [
 
 /* ---------- Demo community (only without Firebase) ---------- */
 const DEMO_USERS = [
-  { name: "Sofia",  country: "🇪🇸", color: "#1D6FE8", points: 640 },
-  { name: "Luca",   country: "🇮🇹", color: "#1E7FA8", points: 520 },
-  { name: "Emma",   country: "🇫🇷", color: "#E5746A", points: 455 },
-  { name: "Jonas",  country: "🇩🇪", color: "#5E7B3A", points: 390 },
-  { name: "Ana",    country: "🇵🇱", color: "#8E2C48", points: 310 },
-  { name: "Mats",   country: "🇳🇱", color: "#C8642E", points: 240 },
-  { name: "Clara",  country: "🇦🇹", color: "#0E2A47", points: 175 },
-  { name: "Niko",   country: "🇬🇷", color: "#3D8C8C", points: 95 },
+  { name: "Sofia",  country: "🇪🇸", color: "#1D6FE8" },
+  { name: "Luca",   country: "🇮🇹", color: "#1E7FA8" },
+  { name: "Emma",   country: "🇫🇷", color: "#E5746A" },
+  { name: "Jonas",  country: "🇩🇪", color: "#5E7B3A" },
+  { name: "Ana",    country: "🇵🇱", color: "#8E2C48" },
+  { name: "Mats",   country: "🇳🇱", color: "#C8642E" },
+  { name: "Clara",  country: "🇦🇹", color: "#0E2A47" },
+  { name: "Niko",   country: "🇬🇷", color: "#3D8C8C" },
 ];
 
 // Per place: ratings (1–5), who has been there, and gallery captions.
