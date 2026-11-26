@@ -330,26 +330,50 @@
     uid = cred.user.uid;
     db = firebase.firestore();
 
+    // Points of other players are NOT taken from their (self-written) profile:
+    // they are recomputed from visit + rating documents (max 1 per place each).
+    const valid = new Set(PLACES.map((p) => p.id));
+    const byUid = { visits: {}, ratings: {}, names: {} };
+    let usersRaw = [];
+    const rebuildUsers = () => {
+      const uids = new Set([...usersRaw.map((u) => u.uid), ...Object.keys(byUid.visits)]);
+      community.users = [...uids].filter((u) => u !== uid).map((u) => {
+        const prof = usersRaw.find((x) => x.uid === u) || byUid.names[u] || {};
+        const vis = byUid.visits[u] || new Set(), rat = byUid.ratings[u] || new Set();
+        const pts = vis.size * CONFIG.points.visit + [...rat].filter((id) => vis.has(id)).length * CONFIG.points.rating;
+        return { uid: u, name: prof.name || "Student", color: prof.color, flag: "", points: pts };
+      });
+    };
+
     db.collection("visits").onSnapshot((snap) => {
-      const v = {};
+      const v = {}; byUid.visits = {};
       snap.forEach((d) => {
-        const x = d.data(); if (x.uid === uid) return;
+        const x = d.data();
+        if (!valid.has(x.placeId) || d.id !== `${x.placeId}_${x.uid}`) return;
+        (byUid.visits[x.uid] = byUid.visits[x.uid] || new Set()).add(x.placeId);
+        byUid.names[x.uid] = { name: x.name, color: x.color };
+        if (x.uid === uid) return;
         (v[x.placeId] = v[x.placeId] || []).push({ uid: x.uid, name: x.name, color: x.color, ts: x.ts || 0 });
       });
       Object.values(v).forEach((list) => list.sort((a, b) => a.ts - b.ts));
-      community.visitors = v; onCommunityChange();
+      community.visitors = v; rebuildUsers(); onCommunityChange();
     }, (e) => console.warn("visits", e));
 
     db.collection("ratings").onSnapshot((snap) => {
-      const r = {};
-      snap.forEach((d) => { const x = d.data(); if (x.uid !== uid) (r[x.placeId] = r[x.placeId] || []).push(x.value); });
-      community.ratings = r; onCommunityChange();
+      const r = {}; byUid.ratings = {};
+      snap.forEach((d) => {
+        const x = d.data(), v = Number(x.value);
+        if (!valid.has(x.placeId) || !(v >= 1 && v <= 5) || d.id !== `${x.placeId}_${x.uid}`) return;
+        (byUid.ratings[x.uid] = byUid.ratings[x.uid] || new Set()).add(x.placeId);
+        if (x.uid !== uid) (r[x.placeId] = r[x.placeId] || []).push(Math.round(v));
+      });
+      community.ratings = r; rebuildUsers(); onCommunityChange();
     }, (e) => console.warn("ratings", e));
 
-    db.collection("users").orderBy("points", "desc").limit(100).onSnapshot((snap) => {
-      const u = [];
-      snap.forEach((d) => { const x = d.data(); if (d.id !== uid) u.push({ uid: d.id, name: x.name, color: x.color, flag: "", points: x.points || 0 }); });
-      community.users = u; onCommunityChange();
+    db.collection("users").limit(300).onSnapshot((snap) => {
+      usersRaw = [];
+      snap.forEach((d) => { const x = d.data(); usersRaw.push({ uid: d.id, name: String(x.name || "").slice(0, 20), color: x.color }); });
+      rebuildUsers(); onCommunityChange();
     }, (e) => console.warn("users", e));
 
     syncUser();
@@ -415,6 +439,44 @@
   function keepScroll(sel, fn) { const el = $(sel), y = el.scrollTop; fn(); el.scrollTop = y; }
 
   // ---------- Geolocation ----------
+  // Anti-spoofing (client side, best effort):
+  //  - a fake-GPS app usually "teleports": jumping kilometres in seconds is flagged
+  //  - accuracy of exactly 0–1 m is typical for mock locations, real GPS is ~3–30 m
+  //  - at upload we ask for a FRESH position (no cached one) and check its age
+  const GEO = { maxAccuracy: 100, maxAgeMs: 60000, maxSpeed: 70 /* m/s ≈ 250 km/h */, suspectMs: 10 * 60000 };
+  let lastFix = null, geoSuspectUntil = 0;
+  function trackFix(pos) {
+    const fix = { lat: pos.coords.latitude, lng: pos.coords.longitude, t: pos.timestamp || Date.now(), acc: pos.coords.accuracy };
+    if (lastFix) {
+      const dist = haversine(lastFix, fix), dt = Math.max(1, (fix.t - lastFix.t) / 1000);
+      if (dist > 1000 && dist / dt > GEO.maxSpeed) geoSuspectUntil = Date.now() + GEO.suspectMs; // teleport
+    }
+    if (fix.acc != null && fix.acc < 1) geoSuspectUntil = Date.now() + GEO.suspectMs; // unrealistically perfect
+    lastFix = fix;
+    return fix;
+  }
+  function freshFix() {
+    return new Promise((resolve) => {
+      if (!("geolocation" in navigator)) return resolve(null);
+      navigator.geolocation.getCurrentPosition(
+        (pos) => { const f = trackFix(pos); userPos = { lat: f.lat, lng: f.lng, acc: f.acc }; updateMe(); resolve(f); },
+        () => resolve(lastFix && Date.now() - lastFix.t <= GEO.maxAgeMs ? lastFix : null), // fall back to a recent fix
+        { enableHighAccuracy: true, maximumAge: 5000, timeout: 8000 }
+      );
+    });
+  }
+  // Returns { ok, reason } – whether a visit can count as "verified on site"
+  function onSiteCheck(p, fix, file) {
+    if (!fix) return { ok: false, reason: "Location unknown – saved without on-site check." };
+    const d = haversine(fix, p);
+    if (Date.now() < geoSuspectUntil) return { ok: false, reason: "Your location jumped unrealistically – saved without on-site check." };
+    if (fix.acc > GEO.maxAccuracy) return { ok: false, reason: `GPS too inaccurate (±${Math.round(fix.acc)} m) – saved without on-site check.` };
+    if (Date.now() - fix.t > GEO.maxAgeMs) return { ok: false, reason: "Location is outdated – saved without on-site check." };
+    if (d > CONFIG.checkinRadius) return { ok: false, reason: `You're ${fmtDist(d)} away – saved without on-site check.` };
+    if (file && file.lastModified && Date.now() - file.lastModified > 24 * 3600e3) return { ok: false, reason: "This photo is older than 24 h – saved without on-site check." };
+    return { ok: true, reason: "You're on site – your visit will be verified." };
+  }
+
   function startGeo(userInitiated) {
     if (!("geolocation" in navigator)) { if (userInitiated) toast("Your browser doesn't support GPS."); return; }
     state.geoAsked = true; save();
@@ -422,6 +484,7 @@
     let first = true;
     geoWatchId = navigator.geolocation.watchPosition(
       (pos) => {
+        trackFix(pos);
         userPos = { lat: pos.coords.latitude, lng: pos.coords.longitude, acc: pos.coords.accuracy };
         updateMe();
         if (first && userInitiated) centerOnMe();
@@ -730,7 +793,7 @@
   function heroHTML(p) {
     const photos = placePhotos(p);
     return [0, 1, 2].map((i) => photos[i]
-      ? `<div class="ph"><img src="${esc(photos[i].src)}" alt="${esc(p.name)}" loading="lazy" onerror="this.remove()">${photos[i].credit ? `<span class="ph-credit">${esc(photos[i].credit)}</span>` : ""}</div>`
+      ? `<div class="ph"><img src="${esc(photos[i].src)}" alt="${esc(p.name)}" loading="lazy" data-fallback>${photos[i].credit ? `<span class="ph-credit">${esc(photos[i].credit)}</span>` : ""}</div>`
       : `<div class="ph">${placeArt(p, i)}</div>`).join("");
   }
 
@@ -873,14 +936,19 @@
     const file = e.target.files && e.target.files[0];
     const id = pendingUpload; pendingUpload = null;
     if (!file || !id) return;
+    if (!/^image\//.test(file.type || "image/")) { toast("Please choose a photo."); return; }
+    if (file.size > 25 * 1024 * 1024) { toast("That photo is too large (max 25 MB)."); return; }
     let data;
     try { data = await compressImage(file, LIVE ? 800 : 1000, LIVE ? 0.68 : 0.72); } catch (err) { toast(err.message); return; }
-    const p = byId(id), d = distTo(p), verified = d != null && d <= CONFIG.checkinRadius;
+    const p = byId(id);
+    let fix = null;
+    if (state.geoAsked) { toast("Checking your location…"); fix = await freshFix(); }
+    const check = onSiteCheck(p, fix, file), verified = check.ok;
     const pts = CONFIG.points.visit;
     openModal(`
       <img class="preview" src="${data}" alt="Preview">
       <h2>${esc(p.name)}</h2>
-      <p>${verified ? "You're on site – your visit will be verified." : d == null ? "Location unknown – saved without on-site check." : `You're ${fmtDist(d)} away – saved without on-site check.`}</p>
+      <p>${esc(check.reason)}</p>
       <label class="field"><input id="capInput" maxlength="40" placeholder="Add a caption (optional)"></label>
       <label style="display:flex;gap:10px;align-items:center;justify-content:center;margin-bottom:16px;font-size:14px;font-weight:600">
         <input type="checkbox" id="shareChk" checked style="width:20px;height:20px;accent-color:var(--orange)"> Share in the group gallery
@@ -998,7 +1066,7 @@
           : above
             ? `<div class="social-proof">${ic("target")}<span>Only <b>${plural(above.points - myPoints() + 1, "point", "points")}</b> until you overtake ${esc(above.name)}!</span></div>`
             : `<div class="social-proof">${ic("award")}<span><b>You're #1!</b> Keep going to stay on top.</span></div>`}
-        <div class="leader">${shown.map((b) => { const i = board.indexOf(b); return `<div class="leader-row ${b.me ? "me" : ""}"><span class="rank">${i + 1}</span>${avatarHTML(b.name, b.color)}<span class="who">${esc(b.name)} ${b.flag || ""}${b.me ? " (you)" : ""}</span><span class="pts">${Number(b.points) || 0}</span></div>`; }).join("")}</div>
+        <div class="leader">${shown.map((b) => { const i = board.indexOf(b); return `<div class="leader-row ${b.me ? "me" : ""}"><span class="rank">${i + 1}</span>${avatarHTML(b.name, b.color)}<span class="who">${esc(b.name)} ${esc(b.flag || "")}${b.me ? " (you)" : ""}</span><span class="pts">${Number(b.points) || 0}</span></div>`; }).join("")}</div>
 
 
         <div class="section-title">My photos <small>${photos.length}</small></div>
@@ -1070,6 +1138,8 @@
 
   function boot() {
     applyTheme();
+    // broken images (e.g. a missing photo file) simply disappear – no inline handlers needed (CSP)
+    document.addEventListener("error", (e) => { const t = e.target; if (t && t.matches && t.matches("img[data-fallback]")) t.remove(); }, true);
     $("#obLogo").innerHTML = LOGO;
     document.querySelectorAll("[data-ic]").forEach((el) => (el.innerHTML = ic(el.dataset.ic)));
     document.querySelectorAll("[data-tile]").forEach((el) => (el.outerHTML = tile(el.dataset.tile, el.dataset.color || (el.classList.contains("nav-t") ? null : "var(--orange)"), el.className)));

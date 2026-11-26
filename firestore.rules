@@ -1,51 +1,86 @@
 rules_version = '2';
 
 // Madeira Quest – Firestore security rules
+// ---------------------------------------------------------------
 // Everyone who opened the app (anonymous sign-in) can READ everything,
-// but can only WRITE their own documents.
+// but can only WRITE their own documents, and only in the expected shape.
+//
+// IMPORTANT: if you add/rename a place in data.js, add its id to placeIds() below.
+// ---------------------------------------------------------------
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    function placeIds() {
+      return ['gaudeamus', 'caco', 'formosa', 'yellowcastle', 'numbertwo', 'reidaponcha',
+              'zebra', 'maia', 'toco', 'almirante', 'vendavelha', 'setemares'];
+    }
     function signedIn() { return request.auth != null; }
+    function data() { return request.resource.data; }
+
+    // document id must be "<placeId>_<uid>" of the writer, for a real place
     function ownsNew(docId) {
       return signedIn()
-        && request.resource.data.uid == request.auth.uid
-        && docId == request.resource.data.placeId + '_' + request.auth.uid;
+        && data().uid == request.auth.uid
+        && data().placeId in placeIds()
+        && docId == data().placeId + '_' + request.auth.uid;
     }
     function ownsOld() { return signedIn() && resource.data.uid == request.auth.uid; }
 
-    match /users/{uid} {
+    function validName(n) { return n is string && n.size() > 0 && n.size() <= 20; }
+    function validColor(c) { return c is string && c.matches('^#[0-9A-Fa-f]{6}$'); }
+    // timestamps may not be in the future (1 min tolerance for clock skew)
+    function validTs(t) { return t is int && t <= request.time.toMillis() + 60000 && t > 1700000000000; }
+
+    match /users/{userId} {
       allow read: if signedIn();
-      allow write: if signedIn() && request.auth.uid == uid
-                   && request.resource.data.name is string
-                   && request.resource.data.name.size() <= 20
-                   && request.resource.data.points is int;
-      allow delete: if signedIn() && request.auth.uid == uid;
+      allow create, update: if signedIn() && request.auth.uid == userId
+        && data().keys().hasOnly(['name', 'color', 'points', 'visited', 'updatedAt'])
+        && validName(data().name)
+        && validColor(data().color)
+        // informational only – the app recomputes everyone's points from visits + ratings
+        && data().points is int && data().points >= 0 && data().points <= 1000
+        && data().visited is int && data().visited >= 0 && data().visited <= 50
+        && data().updatedAt is int;
+      allow delete: if signedIn() && request.auth.uid == userId;
     }
 
     match /visits/{docId} {
       allow read: if signedIn();
-      allow create, update: if ownsNew(docId);
+      allow create, update: if ownsNew(docId)
+        && data().keys().hasOnly(['placeId', 'uid', 'name', 'color', 'ts', 'verified'])
+        && validName(data().name) && validColor(data().color)
+        && validTs(data().ts)
+        && data().verified is bool;
       allow delete: if ownsOld();
     }
 
     match /ratings/{docId} {
       allow read: if signedIn();
       allow create, update: if ownsNew(docId)
-                            && request.resource.data.value is int
-                            && request.resource.data.value >= 1
-                            && request.resource.data.value <= 5
-                            // honest ratings: only after you visited (uploaded a photo)
-                            && exists(/databases/$(database)/documents/visits/$(docId));
+        && data().keys().hasOnly(['placeId', 'uid', 'value', 'ts'])
+        && data().value is int && data().value >= 1 && data().value <= 5
+        && validTs(data().ts)
+        // honest ratings: only after you visited (uploaded a photo)
+        && exists(/databases/$(database)/documents/visits/$(docId));
       allow delete: if ownsOld();
     }
 
     match /photos/{docId} {
       allow read: if signedIn();
       allow create, update: if ownsNew(docId)
-                            && request.resource.data.photo is string
-                            && request.resource.data.photo.size() < 900000;
+        && data().keys().hasOnly(['placeId', 'uid', 'name', 'color', 'ts', 'photo', 'caption'])
+        && validName(data().name) && validColor(data().color)
+        && validTs(data().ts)
+        // only a re-encoded JPEG from the app (no SVG/HTML), max ~650 KB
+        && data().photo is string && data().photo.matches('^data:image/jpeg;base64,[A-Za-z0-9+/=]+$')
+        && data().photo.size() < 900000
+        && data().caption is string && data().caption.size() <= 40;
       allow delete: if ownsOld();
+    }
+
+    // everything else is closed
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }

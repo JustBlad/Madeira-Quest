@@ -72,3 +72,22 @@ Hinweise:
 - Jedes Handy bekommt eine anonyme ID. Jede:r kann alles lesen, aber nur die eigenen Einträge schreiben/löschen.
   Bewerten geht laut Regeln nur, wenn man an dem Ort schon ein Foto hochgeladen hat.
 - Der Standort wird **nie** hochgeladen, nur Name, Farbe, Punkte, Besuche, Bewertungen und geteilte Fotos.
+
+## Sicherheit
+**Was die App absichert**
+- **GPS-Fälschung (best effort):** Beim Upload wird eine frische Position abgefragt. „Vor Ort verifiziert“ gibt es nur, wenn
+  der Ort ≤ 200 m entfernt ist, die Genauigkeit ≤ 100 m beträgt, die Position höchstens 60 s alt ist, das Foto höchstens 24 h alt ist
+  und der Standort nicht unrealistisch „gesprungen“ ist (> 250 km/h) oder eine perfekte Genauigkeit (< 1 m) meldet – beides typisch für Fake-GPS-Apps.
+- **Punkte:** Die Rangliste glaubt keiner Punktzahl vom Handy, sondern rechnet sie aus den Besuchen und Bewertungen neu aus
+  (max. 1 Besuch + 1 Bewertung pro Ort und Person, nur echte Orte).
+- **Firestore-Regeln** (`firestore.rules`): jeder schreibt nur eigene Dokumente, nur bekannte Felder, nur echte Orte,
+  Zeitstempel nicht in der Zukunft, Bewertungen nur nach eigenem Besuch, Fotos nur als JPEG < 900 KB, Bildtext ≤ 40 Zeichen.
+- **XSS:** alle Nutzertexte werden escaped, Farben/Bilder geprüft, dazu eine Content-Security-Policy im `index.html`.
+- **Datenschutz:** Fotos werden neu kodiert → **EXIF-Daten inkl. GPS-Ort des Fotos werden entfernt**. Der Standort wird nie hochgeladen.
+
+**Grenzen (ehrlich):** Alles läuft im Browser. Wer sich auskennt, kann GPS trotzdem fälschen oder selbst „verified: true“ an Firebase schicken.
+Echte Prüfung bräuchte einen Server (z. B. Firebase Cloud Functions). Gegen Spam mit vielen anonymen Konten hilft **Firebase App Check**.
+Für eine Erasmus-Gruppe reicht der aktuelle Schutz.
+
+⚠️ Nach Änderungen an `firestore.rules`: in der Firebase-Konsole unter Firestore → Regeln neu einfügen und veröffentlichen.
+Neue Orte in `data.js` müssen auch in `placeIds()` in den Regeln ergänzt werden.
