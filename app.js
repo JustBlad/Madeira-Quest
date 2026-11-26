@@ -749,12 +749,13 @@
     renderSheet(id);
   }
   function renderSheet(id, silent) {
+    if (!silent) wantPhotos(byId(id));
     const p = byId(id), c = CATEGORIES[p.cat], { avg, count } = avgRating(id), v = visitorsOf(id), d = distTo(p);
     const unlocked = isUnlocked(p), visit = state.visits[id];
     $("#sheet").innerHTML = `
       <button class="sheet-close" aria-label="Close">${ic("x")}</button>
       <div class="sheet-card">
-        <div class="sheet-thumb ph">${thumbHTML(p)}</div>
+        <div class="sheet-thumb ph" data-thumb="${p.id}">${thumbHTML(p)}</div>
         <div class="sheet-body">
           <span class="tag ${visit ? "green" : !unlocked ? "grey" : ""}" style="align-self:flex-start">${visit ? ic("check", "ic-sm") + " Visited" : !unlocked ? ic("lock", "ic-sm") + " Level " + p.level : ic(c.icon, "ic-sm") + " " + c.label}</span>
           <div class="sheet-title">${esc(p.name)}</div>
@@ -778,8 +779,51 @@
   // ---------- Place page ----------
   // Real pictures for the header: official photos from data.js (img/ folder),
   // then photos the group uploaded, then my own photo. Illustrations fill the rest.
+  // ---------- Real photos of the places via Google Places API (official, with attribution) ----------
+  // Needs CONFIG.googleMapsKey with "Places API (New)" enabled. Photos are fetched on demand
+  // (when a place is opened) and kept for this browser session only.
+  const gPhotos = {};          // placeId -> [{ src, credit, link }]
+  const gPending = {};
+  const G_CACHE = "mq.gphotos.v1";
+  try { Object.assign(gPhotos, JSON.parse(sessionStorage.getItem(G_CACHE) || "{}")); } catch (e) { /* ignore */ }
+  const usePlacePhotos = () => !!CONFIG.googleMapsKey && CONFIG.googlePlacePhotos !== false;
+  function loadPlacePhotos(p) {
+    if (!usePlacePhotos() || gPhotos[p.id] || gPending[p.id]) return Promise.resolve(gPhotos[p.id] || []);
+    gPending[p.id] = (async () => {
+      try {
+        await loadGoogleMaps();
+        const { Place } = await google.maps.importLibrary("places");
+        const { places } = await Place.searchByText({
+          textQuery: `${p.name}, Funchal, Madeira`,
+          fields: ["id", "displayName", "location", "photos"],
+          locationBias: { center: { lat: p.lat, lng: p.lng }, radius: 300 },
+          maxResultCount: 1,
+        });
+        const place = places && places[0];
+        // only accept a result that is really at our place (≤ 400 m)
+        if (!place || !place.location || haversine({ lat: place.location.lat(), lng: place.location.lng() }, p) > 400) { gPhotos[p.id] = []; return []; }
+        gPhotos[p.id] = (place.photos || []).slice(0, 3).map((ph) => {
+          const a = (ph.authorAttributions || [])[0] || {};
+          return { src: ph.getURI({ maxWidth: 900 }), credit: `© ${a.displayName || "Google user"} · Google Maps`, link: a.uri || "" };
+        });
+        try { sessionStorage.setItem(G_CACHE, JSON.stringify(gPhotos)); } catch (e) { /* ignore */ }
+        return gPhotos[p.id];
+      } catch (e) { console.warn("Place photos", p.id, e); gPhotos[p.id] = []; return []; }
+      finally { delete gPending[p.id]; }
+    })();
+    return gPending[p.id];
+  }
+  // after photos arrived: refresh the visible picture slots of that place
+  function refreshPlacePictures(p) {
+    if (location.hash === `#/place/${p.id}` && $("#heroWrap")) $("#heroWrap").innerHTML = heroHTML(p);
+    if (selectedId === p.id) renderSheet(p.id, true);
+    document.querySelectorAll(`[data-thumb="${p.id}"]`).forEach((el) => (el.innerHTML = thumbHTML(p)));
+  }
+  function wantPhotos(p) { if (usePlacePhotos() && !gPhotos[p.id]) loadPlacePhotos(p).then(() => refreshPlacePictures(p)); }
+
   function placePhotos(p) {
     const list = (p.photos || []).map((src) => ({ src, credit: p.photoCredit || "" }));
+    (gPhotos[p.id] || []).forEach((x) => list.push(x));
     (photoCache[p.id] || []).forEach((x) => { const img = safeImg(x.photo); if (img) list.push({ src: img, credit: `Photo: ${x.name}` }); });
     const v = state.visits[p.id];
     if (v && v.photo) list.push({ src: v.photo, credit: "Your photo" });
@@ -787,13 +831,14 @@
   }
   function thumbHTML(p) {
     const v = state.visits[p.id];
-    const src = (p.photos && p.photos[0]) || (v && v.photo);
+    const g = gPhotos[p.id] && gPhotos[p.id][0];
+    const src = (p.photos && p.photos[0]) || (g && g.src) || (v && v.photo);
     return src ? `<img src="${esc(src)}" alt="" loading="lazy">` : placeArt(p, 0);
   }
   function heroHTML(p) {
     const photos = placePhotos(p);
     return [0, 1, 2].map((i) => photos[i]
-      ? `<div class="ph"><img src="${esc(photos[i].src)}" alt="${esc(p.name)}" loading="lazy" data-fallback>${photos[i].credit ? `<span class="ph-credit">${esc(photos[i].credit)}</span>` : ""}</div>`
+      ? `<div class="ph"><img src="${esc(photos[i].src)}" alt="${esc(p.name)}" loading="lazy" data-fallback>${photos[i].credit ? (photos[i].link ? `<a class="ph-credit" href="${esc(photos[i].link)}" target="_blank" rel="noopener nofollow">${esc(photos[i].credit)}</a>` : `<span class="ph-credit">${esc(photos[i].credit)}</span>`) : ""}</div>`
       : `<div class="ph">${placeArt(p, i)}</div>`).join("");
   }
 
@@ -815,6 +860,7 @@
 
   function renderPlace(id, fromRefresh) {
     const p = byId(id); if (!p) { location.hash = "#/map"; return; }
+    if (!fromRefresh) wantPhotos(p);
     const c = CATEGORIES[p.cat], { avg, count } = avgRating(id), v = visitorsOf(id), d = distTo(p);
     const visit = state.visits[id], unlocked = isUnlocked(p), fav = state.favorites.includes(id);
     const others = (community.visitors[id] || []).length;
@@ -999,7 +1045,7 @@
         <div class="place-list">${list.map((p) => {
           const { avg, count } = avgRating(p.id), c = CATEGORIES[p.cat], n = visitorsOf(p.id).length, vis = state.visits[p.id];
           return `<a class="place-row" href="#/place/${p.id}">
-            <div class="pr-thumb ph">${thumbHTML(p)}</div>
+            <div class="pr-thumb ph" data-thumb="${p.id}">${thumbHTML(p)}</div>
             <div class="pr-body"><b>${esc(p.name)}</b>
               <small>${c.label} · ${count ? `★ ${avg.toFixed(1)}` : "new"} · ${n ? `${n} visited` : "nobody yet"}${userPos ? ` · ${fmtDist(distTo(p))}` : ""}</small></div>
             <div class="pr-state ${vis ? "done" : ""}">${vis ? ic("check") : "+" + CONFIG.points.visit}</div>
@@ -1072,7 +1118,7 @@
         <div class="section-title">My photos <small>${photos.length}</small></div>
         ${photos.length ? `<div class="my-photos">${photos.map((p) => `<a class="ph" href="#/place/${p.id}"><img src="${state.visits[p.id].photo}" alt="${esc(p.name)}"></a>`).join("")}</div>` : `<div class="empty">No photos yet. Pick a place on the map!</div>`}
 
-        ${state.favorites.length ? `<div class="section-title">Saved <small>${state.favorites.length}</small></div><div class="place-list">${state.favorites.map(byId).filter(Boolean).map((p) => `<a class="place-row" href="#/place/${p.id}"><div class="pr-thumb ph">${thumbHTML(p)}</div><div class="pr-body"><b>${esc(p.name)}</b><small>${CATEGORIES[p.cat].label}</small></div><div class="pr-state ${isVisited(p.id) ? "done" : ""}">${ic(isVisited(p.id) ? "check" : "arrow")}</div></a>`).join("")}</div>` : ""}
+        ${state.favorites.length ? `<div class="section-title">Saved <small>${state.favorites.length}</small></div><div class="place-list">${state.favorites.map(byId).filter(Boolean).map((p) => `<a class="place-row" href="#/place/${p.id}"><div class="pr-thumb ph" data-thumb="${p.id}">${thumbHTML(p)}</div><div class="pr-body"><b>${esc(p.name)}</b><small>${CATEGORIES[p.cat].label}</small></div><div class="pr-state ${isVisited(p.id) ? "done" : ""}">${ic(isVisited(p.id) ? "check" : "arrow")}</div></a>`).join("")}</div>` : ""}
 
         <div class="section-title">Appearance</div>
         <div class="seg" id="themeSeg">${[["auto", "auto", "Auto"], ["light", "sun", "Light"], ["dark", "moon", "Dark"]].map(([k, i, l]) => `<button data-theme-opt="${k}" class="${(state.theme || "auto") === k ? "on" : ""}">${ic(i)}${l}</button>`).join("")}</div>

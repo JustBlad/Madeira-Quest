@@ -52,6 +52,12 @@ Ohne Key nutzt die App MapTiler/Esri. Mit Key wird die echte Google-Maps-Karte (
    - *API-Einschränkungen*: nur **Maps JavaScript API**
 6. Schlüssel in `data.js` bei `googleMapsKey: ""` eintragen.
 
+**Echte Fotos der Orte (Google Places):** Mit demselben Schlüssel zeigt die App automatisch die Google-Maps-Fotos jedes Orts
+(mit Namen des Fotografen, wie Google es vorschreibt). Dafür zusätzlich unter *APIs & Dienste → Bibliothek* die
+**„Places API (New)“** aktivieren und sie beim Schlüssel unter *API-Einschränkungen* mit erlauben.
+Fotos werden erst geladen, wenn man einen Ort öffnet, und pro Browser-Sitzung zwischengespeichert. Ausschalten: `googlePlacePhotos: false`.
+Foto-Abrufe kosten nach einem Gratis-Kontingent Geld – Budget-Warnung in der Cloud Console setzen.
+
 Wird der Schlüssel abgelehnt (falsch, Abrechnung aus, falsche Domain), schaltet die App automatisch auf die Ersatzkarte.
 
 ## Echtes Teilen mit Firebase (kostenlos)
