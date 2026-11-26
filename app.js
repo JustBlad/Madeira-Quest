@@ -813,17 +813,61 @@
     })();
     return gPending[p.id];
   }
+  // ---------- Free photos from Wikimedia Commons (no key, no account, no cost) ----------
+  // Looks for freely licensed photos that were taken right at the place's coordinates.
+  // Beaches get a bigger search radius than cafés/bars (which are small).
+  const cPhotos = {};
+  const cPending = {};
+  const C_CACHE = "mq.cphotos.v1";
+  try { Object.assign(cPhotos, JSON.parse(sessionStorage.getItem(C_CACHE) || "{}")); } catch (e) { /* ignore */ }
+  const useCommons = () => CONFIG.commonsPhotos !== false;
+  const plainText = (html) => { const d = document.createElement("div"); d.innerHTML = String(html || "").replace(/<(script|style)[^>]*>[\s\S]*?<\/\1>/gi, ""); return (d.textContent || "").trim().slice(0, 60); };
+  function loadCommonsPhotos(p) {
+    if (!useCommons() || cPhotos[p.id] || cPending[p.id]) return Promise.resolve(cPhotos[p.id] || []);
+    const radius = p.cat === "beach" ? 300 : 90;
+    const coord = `${p.lat}|${p.lng}`;
+    const url = "https://commons.wikimedia.org/w/api.php?" + new URLSearchParams({
+      action: "query", format: "json", origin: "*",
+      generator: "geosearch", ggscoord: coord, ggsradius: String(radius), ggsnamespace: "6", ggslimit: "25",
+      prop: "imageinfo|coordinates", iiprop: "url|mime|size|extmetadata", iiurlwidth: "900", codistancefrompoint: coord,
+    });
+    cPending[p.id] = fetch(url).then((res) => res.json()).then((json) => {
+      const pages = Object.values((json.query && json.query.pages) || {});
+      cPhotos[p.id] = pages
+        .map((pg) => ({ pg, ii: (pg.imageinfo || [])[0], dist: ((pg.coordinates || [])[0] || {}).dist ?? 9999 }))
+        .filter(({ pg, ii }) => ii && ii.mime === "image/jpeg" && ii.width >= 800 && ii.thumburl && !/map|plan|logo|diagram|karte|mapa/i.test(pg.title))
+        .sort((a, b) => a.dist - b.dist)
+        .slice(0, 3)
+        .map(({ ii }) => {
+          const m = ii.extmetadata || {};
+          const who = plainText(m.Artist && m.Artist.value) || "Wikimedia Commons";
+          const lic = plainText(m.LicenseShortName && m.LicenseShortName.value);
+          return { src: ii.thumburl, credit: `© ${who}${lic ? " · " + lic : ""}`, link: ii.descriptionurl || "" };
+        })
+        .filter((x) => /^https:\/\/upload\.wikimedia\.org\//.test(x.src));
+      try { sessionStorage.setItem(C_CACHE, JSON.stringify(cPhotos)); } catch (e) { /* ignore */ }
+      return cPhotos[p.id];
+    }).catch((e) => { console.warn("Commons photos", p.id, e); cPhotos[p.id] = []; return []; })
+      .finally(() => { delete cPending[p.id]; });
+    return cPending[p.id];
+  }
+
   // after photos arrived: refresh the visible picture slots of that place
   function refreshPlacePictures(p) {
     if (location.hash === `#/place/${p.id}` && $("#heroWrap")) $("#heroWrap").innerHTML = heroHTML(p);
     if (selectedId === p.id) renderSheet(p.id, true);
     document.querySelectorAll(`[data-thumb="${p.id}"]`).forEach((el) => (el.innerHTML = thumbHTML(p)));
   }
-  function wantPhotos(p) { if (usePlacePhotos() && !gPhotos[p.id]) loadPlacePhotos(p).then(() => refreshPlacePictures(p)); }
+  function wantPhotos(p) {
+    if ((p.photos || []).length >= 3) return; // own photos are enough
+    if (usePlacePhotos() && !gPhotos[p.id]) loadPlacePhotos(p).then(() => refreshPlacePictures(p));
+    if (useCommons() && !cPhotos[p.id]) loadCommonsPhotos(p).then(() => refreshPlacePictures(p));
+  }
 
   function placePhotos(p) {
     const list = (p.photos || []).map((src) => ({ src, credit: p.photoCredit || "" }));
     (gPhotos[p.id] || []).forEach((x) => list.push(x));
+    (cPhotos[p.id] || []).forEach((x) => list.push(x));
     (photoCache[p.id] || []).forEach((x) => { const img = safeImg(x.photo); if (img) list.push({ src: img, credit: `Photo: ${x.name}` }); });
     const v = state.visits[p.id];
     if (v && v.photo) list.push({ src: v.photo, credit: "Your photo" });
@@ -832,7 +876,8 @@
   function thumbHTML(p) {
     const v = state.visits[p.id];
     const g = gPhotos[p.id] && gPhotos[p.id][0];
-    const src = (p.photos && p.photos[0]) || (g && g.src) || (v && v.photo);
+    const c = cPhotos[p.id] && cPhotos[p.id][0];
+    const src = (p.photos && p.photos[0]) || (g && g.src) || (c && c.src) || (v && v.photo);
     return src ? `<img src="${esc(src)}" alt="" loading="lazy">` : placeArt(p, 0);
   }
   function heroHTML(p) {

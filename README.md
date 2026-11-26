@@ -52,6 +52,11 @@ Ohne Key nutzt die App MapTiler/Esri. Mit Key wird die echte Google-Maps-Karte (
    - *API-Einschränkungen*: nur **Maps JavaScript API**
 6. Schlüssel in `data.js` bei `googleMapsKey: ""` eintragen.
 
+**Kostenlose Fotos (Wikimedia Commons, Standard):** Ohne Key und ohne Konto sucht die App automatisch frei lizenzierte Fotos,
+die direkt an den Koordinaten eines Orts aufgenommen wurden (Strände: 300 m Umkreis, sonst 90 m), und zeigt Fotograf + Lizenz an.
+Für Strände/Fort gibt es meist gute Bilder, für einzelne Bars/Cafés oft keine – dann bleiben die Illustrationen.
+Eigene Fotos im `img/`-Ordner haben immer Vorrang. Ausschalten: `commonsPhotos: false` in `data.js`.
+
 **Echte Fotos der Orte (Google Places):** Mit demselben Schlüssel zeigt die App automatisch die Google-Maps-Fotos jedes Orts
 (mit Namen des Fotografen, wie Google es vorschreibt). Dafür zusätzlich unter *APIs & Dienste → Bibliothek* die
 **„Places API (New)“** aktivieren und sie beim Schlüssel unter *API-Einschränkungen* mit erlauben.

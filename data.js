@@ -23,6 +23,7 @@ const CONFIG = {
   // Empty = the MapTiler/Esri map above is used instead.
   googleMapsKey: "",
   googleMapId: "",   // optional: your own Map ID from Google Cloud (else Google's demo ID)
+  commonsPhotos: true,       // free photos from Wikimedia Commons taken at each place (no key, no cost)
   googlePlacePhotos: true,   // with a Google key: show real photos of each place (Places API (New) must be enabled)
 };
 
